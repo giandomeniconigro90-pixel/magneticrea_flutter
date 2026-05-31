@@ -52,9 +52,9 @@ enum TileCategory {
 /// Forma geometrica della piastrella.
 enum TileShape {
   // ── forme base standard ──────────────────────────────────────────
-  squareLarge,            // quadrato grande
-  squareSmall,            // quadrato piccolo
-  rectangle,              // rettangolo
+  squareLarge,            // quadrato grande pieno
+  squareSmall,            // quadrato piccolo pieno
+  rectangle,              // rettangolo pieno
   triangleEquilateral,    // triangolo equilatero
   triangleIsoscaleLarge,  // triangolo isoscele grande
   triangleIsoscaleSmall,  // triangolo isoscele piccolo
@@ -64,8 +64,10 @@ enum TileShape {
   hexagon,                // esagono
 
   // ── aperture standard ────────────────────────────────────────────
-  door,                   // porta (arco passante)
-  window,                 // finestra (griglia passante)
+  squareLargeOpen,        // quadrato grande con foro quadrato centrale (cornice)
+  door,                   // porta (arco semicircolare passante)
+  doorPentagon,           // porta a forma di casa (apertura pentagonale passante)
+  window,                 // finestra griglia 2×2 passante
 
   // ── funzionali standard ──────────────────────────────────────────
   carBase,                // base macchina con ruote
