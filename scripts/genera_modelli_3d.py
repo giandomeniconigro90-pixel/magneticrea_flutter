@@ -9,8 +9,19 @@ S = 1.0
 T = 0.05
 
 COLORS = {
-    'quadrato_grande':           (1.0,  0.42, 0.42, 1),
-    'triangolo_isoscele_grande': (0.27, 0.67, 0.95, 1),
+    'quadrato_grande':            (1.0,  0.42, 0.42, 1),  # rosso
+    'quadrato_piccolo':           (1.0,  0.62, 0.26, 1),  # arancio
+    'rettangolo':                 (0.15, 0.82, 0.80, 1),  # verde acqua
+    'triangolo_equilatero':       (0.13, 0.75, 0.42, 1),  # verde
+    'triangolo_isoscele_grande':  (0.27, 0.67, 0.95, 1),  # blu
+    'triangolo_isoscele_piccolo': (0.17, 0.80, 0.73, 1),  # celeste
+    'triangolo_rettangolo':       (0.65, 0.37, 0.92, 1),  # viola
+    'rombo':                      (0.99, 0.36, 0.40, 1),  # rosso acceso
+    'pentagono':                  (0.99, 0.59, 0.27, 1),  # arancio
+    'esagono':                    (0.29, 0.48, 0.93, 1),  # blu
+    'porta':                      (0.91, 0.26, 0.58, 1),  # rosa
+    'finestra':                   (0.91, 0.26, 0.58, 1),  # rosa
+    'base_macchina':              (0.27, 0.67, 0.95, 1),  # azzurro
 }
 
 def clear_scene():
@@ -39,7 +50,7 @@ def export_glb(path):
 
 # ── PRIMITIVE 3D ──────────────────────────────────────────────────
 
-def add_quad_wall(name, cx, cy, cz, face, is_new):
+def add_quad_wall(name, cx, cy, cz, face, is_new, tile_id='quadrato_grande'):
     h = S / 2
     t = T / 2
     if face in ('N', 'S'):
@@ -59,10 +70,10 @@ def add_quad_wall(name, cx, cy, cz, face, is_new):
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
     obj.location = (cx, cy, cz)
-    obj.data.materials.append(make_mat('quadrato_grande', is_new))
+    obj.data.materials.append(make_mat(tile_id, is_new))
     return obj
 
-def add_tri_roof_pyramid(side, base_z, apex_z, is_new):
+def add_tri_roof_pyramid(side, base_z, apex_z, is_new, tile_id='triangolo_isoscele_grande'):
     t = T / 2
     if side == 'N':
         verts = [(-0.5,-0.5-t,base_z),(0.5,-0.5-t,base_z),(0.0,-t,apex_z),
@@ -82,7 +93,32 @@ def add_tri_roof_pyramid(side, base_z, apex_z, is_new):
     mesh.update()
     obj = bpy.data.objects.new(f"tri_{side}", mesh)
     bpy.context.collection.objects.link(obj)
-    obj.data.materials.append(make_mat('triangolo_isoscele_grande', is_new))
+    obj.data.materials.append(make_mat(tile_id, is_new))
+    return obj
+
+def add_rect_wall(name, cx, cy, cz, face, is_new, tile_id='rettangolo', w=1.0, h=0.5):
+    """Pannello rettangolare (larghezza w, altezza h)."""
+    hw = w / 2
+    hh = h / 2
+    t  = T / 2
+    if face in ('N', 'S'):
+        verts = [
+            (-hw, -t, -hh), ( hw, -t, -hh), ( hw, -t,  hh), (-hw, -t,  hh),
+            (-hw,  t, -hh), ( hw,  t, -hh), ( hw,  t,  hh), (-hw,  t,  hh),
+        ]
+    else:
+        verts = [
+            (-t, -hw, -hh), (-t,  hw, -hh), (-t,  hw,  hh), (-t, -hw,  hh),
+            ( t, -hw, -hh), ( t,  hw, -hh), ( t,  hw,  hh), ( t, -hw,  hh),
+        ]
+    faces = [[0,1,2,3],[7,6,5,4],[0,4,5,1],[1,5,6,2],[2,6,7,3],[3,7,4,0]]
+    mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    obj.location = (cx, cy, cz)
+    obj.data.materials.append(make_mat(tile_id, is_new))
     return obj
 
 def add_camera(location=(4.5, -4.5, 4.5)):
@@ -104,10 +140,16 @@ def draw_step(pieces):
         kind = item[0]
         if kind == 'quad':
             _, face, cx, cy, cz, is_new = item
-            add_quad_wall(f"q{face}", cx, cy, cz, face, is_new)
+            add_quad_wall(f"q_{face}_{cx}_{cz}", cx, cy, cz, face, is_new)
+        elif kind == 'quad_tile':
+            _, face, cx, cy, cz, is_new, tile_id = item
+            add_quad_wall(f"q_{face}_{cx}_{cz}", cx, cy, cz, face, is_new, tile_id)
         elif kind == 'tri_pyramid':
             _, side, base_z, apex_z, is_new = item
             add_tri_roof_pyramid(side, base_z, apex_z, is_new)
+        elif kind == 'rect':
+            _, face, cx, cy, cz, is_new, tile_id, w, h = item
+            add_rect_wall(f"r_{face}_{cx}_{cz}", cx, cy, cz, face, is_new, tile_id, w, h)
 
 # ── HELPER: pannello singolo già posato (semitrasparente) ───────────────
 def quad_old(face, piano):
@@ -123,12 +165,10 @@ def quad_new(face, piano):
     return ('quad', face, cx, cy, cz, True)
 
 # ── TORRE: 16 step (1 pannello per volta) + intro + finale = 18 GLB ──────
-# Ordine pannelli: N, S, E, W per ogni piano, poi N,S,E,W tetto
 # step1=intro, step2..13=muri (3 piani x 4), step14..17=tetto, step18=finale
 
 torre_steps = [[]]
 
-# Piani 1, 2, 3 — 4 pannelli ciascuno
 for piano in range(1, 4):
     already = [quad_old(f, p) for p in range(1, piano) for f in ['N','S','E','W']]
     for i, face_new in enumerate(['N','S','E','W']):
@@ -136,7 +176,6 @@ for piano in range(1, 4):
         step = already + done_this + [quad_new(face_new, piano)]
         torre_steps.append(step)
 
-# Tetto piramide — 4 pannelli uno per volta
 base_z = 3.0
 apex_z = 3.9
 tutto_muri = [quad_old(f, p) for p in range(1, 4) for f in ['N','S','E','W']]
@@ -146,11 +185,10 @@ for i, side_new in enumerate(tetto_sides):
     step = tutto_muri + done_tetto + [('tri_pyramid', side_new, base_z, apex_z, True)]
     torre_steps.append(step)
 
-# Finale
 torre_steps.append([])
 
 # ── ESECUZIONE ──────────────────────────────────────────────────
-# NOTA: la Casa è is3d=false, usa la guida 2D flat — nessun GLB necessario.
+# NOTA: le costruzioni is3d=false usano la guida 2D flat — nessun GLB necessario.
 CONSTRUCTIONS = {
     'torre': (torre_steps, (4.5, -4.5, 4.5)),
 }
