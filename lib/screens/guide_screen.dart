@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
@@ -14,31 +15,44 @@ class GuideScreen extends StatefulWidget {
   State<GuideScreen> createState() => _GuideScreenState();
 }
 
-class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStateMixin {
-  late final construction = kConstructions.firstWhere((c) => c.id == widget.constructionId);
+class _GuideScreenState extends State<GuideScreen>
+    with TickerProviderStateMixin {
+  late final construction =
+      kConstructions.firstWhere((c) => c.id == widget.constructionId);
   int _currentStep = 0;
-  late AnimationController _animCtrl;
+  late AnimationController _fadeCtrl;
+  late AnimationController _pulseCtrl;
   late Animation<double> _fadeAnim;
+  late Animation<double> _pulseAnim;
 
   @override
   void initState() {
     super.initState();
-    _animCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
-    _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeIn);
-    _animCtrl.forward();
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 350));
+    _pulseCtrl = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 800),
+        lowerBound: 0.85,
+        upperBound: 1.0);
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeIn);
+    _pulseAnim = _pulseCtrl;
+    _fadeCtrl.forward();
+    _pulseCtrl.repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _animCtrl.dispose();
+    _fadeCtrl.dispose();
+    _pulseCtrl.dispose();
     super.dispose();
   }
 
   void _goTo(int idx) {
     if (idx < 0 || idx >= construction.steps.length) return;
-    _animCtrl.reset();
+    _fadeCtrl.reset();
     setState(() => _currentStep = idx);
-    _animCtrl.forward();
+    _fadeCtrl.forward();
   }
 
   @override
@@ -49,19 +63,23 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
     final isFirst = _currentStep == 0;
     final tile = step.tileId != null ? tileById(step.tileId!) : null;
     final progress = (_currentStep + 1) / steps.length;
-    final newCount = step.placedPieces.where((p) => p.isNew && p.tileId == step.tileId).length;
+    final newCount =
+        step.placedPieces.where((p) => p.isNew == true).length;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4FF),
       appBar: AppBar(
-        title: Text(construction.name, style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+        title: Text(construction.name,
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(6),
           child: LinearProgressIndicator(
             value: progress,
             backgroundColor: const Color(0xFFE0E0E0),
-            color: isLast ? const Color(0xFF20BF6B) : const Color(0xFF4B7BEC),
+            color: isLast
+                ? const Color(0xFF20BF6B)
+                : const Color(0xFF4B7BEC),
             minHeight: 6,
           ),
         ),
@@ -75,24 +93,25 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
                   ? _FinaleView()
                   : isFirst
                       ? _IntroView(construction: construction)
-                      : tile != null
-                          ? _Viewer3D(
-                              key: ValueKey('${widget.constructionId}_${_currentStep}_${tile.id}'),
-                              tileId: tile.id,
-                              color: tile.color,
-                              count: newCount > 0 ? newCount : 1,
-                              label: tile.label,
-                              action: step.action,
-                            )
-                          : _IntroView(construction: construction),
+                      : _StepView(
+                          key: ValueKey(
+                              '${widget.constructionId}_$_currentStep'),
+                          step: step,
+                          tile: tile,
+                          newCount: newCount,
+                          pulseAnim: _pulseAnim,
+                          constructionId: widget.constructionId,
+                        ),
             ),
           ),
+          // ── NAVIGAZIONE ────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -100,7 +119,10 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
                   ),
                   child: Text(
                     '${_currentStep + 1} / ${steps.length}',
-                    style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 14, color: const Color(0xFF636E72)),
+                    style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: const Color(0xFF636E72)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -109,25 +131,40 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
                     child: OutlinedButton(
                       onPressed: () => _goTo(_currentStep - 1),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: Text('\u2190 Indietro', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                      child: Text('\u2190 Indietro',
+                          style: GoogleFonts.nunito(
+                              fontWeight: FontWeight.w700)),
                     ),
                   ),
                 if (_currentStep > 0) const SizedBox(width: 12),
                 Expanded(
                   flex: 2,
                   child: ElevatedButton(
-                    onPressed: isLast ? () => Navigator.pop(context) : () => _goTo(_currentStep + 1),
+                    onPressed: isLast
+                        ? () => Navigator.pop(context)
+                        : () => _goTo(_currentStep + 1),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      backgroundColor: isLast ? const Color(0xFF20BF6B) : const Color(0xFF4B7BEC),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      backgroundColor: isLast
+                          ? const Color(0xFF20BF6B)
+                          : const Color(0xFF4B7BEC),
                     ),
                     child: Text(
-                      isLast ? '\uD83C\uDF89 Finito!' : 'Avanti \u2192',
-                      style: GoogleFonts.nunito(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 16),
+                      isLast
+                          ? '\uD83C\uDF89 Finito!'
+                          : 'Avanti \u2192',
+                      style: GoogleFonts.nunito(
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          fontSize: 16),
                     ),
                   ),
                 ),
@@ -140,94 +177,144 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
   }
 }
 
-class _Viewer3D extends StatelessWidget {
-  final String tileId;
-  final Color color;
-  final int count;
-  final String label;
-  final String action;
+// ── SCHERMATA PASSO con schema progressivo + pezzo 3D ──────────────────────
+class _StepView extends StatelessWidget {
+  final BuildStep step;
+  final TileType? tile;
+  final int newCount;
+  final Animation<double> pulseAnim;
+  final String constructionId;
 
-  const _Viewer3D({
+  const _StepView({
     super.key,
-    required this.tileId,
-    required this.color,
-    required this.count,
-    required this.label,
-    required this.action,
+    required this.step,
+    required this.tile,
+    required this.newCount,
+    required this.pulseAnim,
+    required this.constructionId,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // ── Istruzione testuale ──
         Container(
-          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.10),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: color.withOpacity(0.35), width: 1.5),
+            color: tile != null
+                ? tile!.color.withOpacity(0.10)
+                : const Color(0xFFE8EEFF),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: tile != null
+                  ? tile!.color.withOpacity(0.35)
+                  : const Color(0xFF4B7BEC).withOpacity(0.3),
+              width: 1.5,
+            ),
           ),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                child: const Text('\uD83D\uDC40', style: TextStyle(fontSize: 18)),
-              ),
-              const SizedBox(width: 12),
+              if (tile != null)
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                      color: tile!.color, shape: BoxShape.circle),
+                  child: CustomPaint(
+                    painter: TilePainter(
+                        shape: tile!.shape, color: Colors.white),
+                  ),
+                ),
+              if (tile != null) const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  action,
-                  style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: const Color(0xFF2D3436), height: 1.4),
+                  step.action,
+                  style: GoogleFonts.nunito(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF2D3436),
+                      height: 1.3),
                 ),
               ),
+              if (tile != null && newCount > 0)
+                Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: tile!.color,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '\u00D7$newCount',
+                    style: GoogleFonts.nunito(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14),
+                  ),
+                ),
             ],
           ),
         ),
+        // ── Schema progressivo (sopra) + Pezzo 3D (sotto) ──
         Expanded(
-          child: Stack(
+          child: Row(
             children: [
-              ModelViewer(
-                src: 'assets/models/$tileId.glb',
-                autoRotate: true,
-                autoRotateDelay: 0,
-                rotationPerSecond: '30deg',
-                cameraControls: true,
-                backgroundColor: const Color(0xFFF0F4FF),
-                shadowIntensity: 1,
+              // Schema costruzione progressivo
+              Expanded(
+                flex: 3,
+                child: _ProgressSchema(
+                  step: step,
+                  pulseAnim: pulseAnim,
+                ),
               ),
-              Positioned(
-                top: 16, right: 16,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              // Pezzo 3D piccolo a destra
+              if (tile != null)
+                Container(
+                  width: 140,
+                  margin: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [BoxShadow(color: color.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 3))],
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                        color: tile!.color.withOpacity(0.4), width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                          color: tile!.color.withOpacity(0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3))
+                    ],
                   ),
-                  child: Text(
-                    count == 1 ? '\u00D7 1 pezzo' : '\u00D7 $count pezzi',
-                    style: GoogleFonts.nunito(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          tile!.short,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.nunito(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: tile!.color),
+                        ),
+                      ),
+                      Expanded(
+                        child: ModelViewer(
+                          src: 'assets/models/${tile!.id}.glb',
+                          autoRotate: true,
+                          autoRotateDelay: 0,
+                          rotationPerSecond: '40deg',
+                          cameraControls: false,
+                          backgroundColor: Colors.white,
+                          shadowIntensity: 0,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              Positioned(
-                bottom: 12, left: 0, right: 0,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      label,
-                      style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: color),
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -236,6 +323,89 @@ class _Viewer3D extends StatelessWidget {
   }
 }
 
+// ── Schema progressivo con pezzi colorati/grigi ────────────────────────────
+class _ProgressSchema extends StatelessWidget {
+  final BuildStep step;
+  final Animation<double> pulseAnim;
+
+  const _ProgressSchema(
+      {required this.step, required this.pulseAnim});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final w = constraints.maxWidth;
+      final h = constraints.maxHeight;
+      final baseSize = w * 0.18;
+
+      return Container(
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFDFE6E9)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: step.placedPieces.map((piece) {
+              final tile = tileById(piece.tileId);
+              if (tile == null) return const SizedBox.shrink();
+              final isNew = piece.isNew == true;
+              final size = baseSize *
+                  (tile.shape == TileShape.squareLarge
+                      ? 1.2
+                      : tile.shape == TileShape.hexagon
+                          ? 1.1
+                          : tile.shape == TileShape.triangleIsoscaleLarge
+                              ? 1.15
+                              : tile.shape == TileShape.squareSmall
+                                  ? 0.8
+                                  : tile.shape ==
+                                          TileShape.triangleIsoscaleSmall
+                                      ? 0.7
+                                      : 1.0);
+              final color = isNew
+                  ? tile.color
+                  : tile.color.withOpacity(0.35);
+
+              Widget pieceWidget = CustomPaint(
+                size: Size(size, size),
+                painter: TilePainter(shape: tile.shape, color: color),
+              );
+
+              if (piece.rotation != null && piece.rotation != 0) {
+                pieceWidget = Transform.rotate(
+                  angle: (piece.rotation! * pi) / 180,
+                  child: pieceWidget,
+                );
+              }
+
+              if (isNew) {
+                pieceWidget = AnimatedBuilder(
+                  animation: pulseAnim,
+                  builder: (_, child) => Transform.scale(
+                    scale: pulseAnim.value,
+                    child: child,
+                  ),
+                  child: pieceWidget,
+                );
+              }
+
+              return Positioned(
+                left: piece.x * w - size / 2,
+                top: piece.y * h - size / 2,
+                child: pieceWidget,
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+// ── SCHERMATA INTRODUTTIVA ─────────────────────────────────────────────────
 class _IntroView extends StatelessWidget {
   final dynamic construction;
   const _IntroView({required this.construction});
@@ -248,21 +418,29 @@ class _IntroView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(construction.emoji, style: const TextStyle(fontSize: 80)),
+            Text(construction.emoji,
+                style: const TextStyle(fontSize: 80)),
             const SizedBox(height: 20),
             Text(
               construction.name,
-              style: GoogleFonts.nunito(fontSize: 28, fontWeight: FontWeight.w900, color: const Color(0xFF2D3436)),
+              style: GoogleFonts.nunito(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF2D3436)),
             ),
             const SizedBox(height: 12),
             Text(
               construction.description,
               textAlign: TextAlign.center,
-              style: GoogleFonts.nunito(fontSize: 15, color: const Color(0xFF636E72), height: 1.5),
+              style: GoogleFonts.nunito(
+                  fontSize: 15,
+                  color: const Color(0xFF636E72),
+                  height: 1.5),
             ),
             const SizedBox(height: 20),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFF3CD),
                 borderRadius: BorderRadius.circular(16),
@@ -270,12 +448,16 @@ class _IntroView extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('\uD83D\uDCA1', style: TextStyle(fontSize: 18)),
+                  const Text('\uD83D\uDCA1',
+                      style: TextStyle(fontSize: 18)),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
                       construction.tip,
-                      style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF856404)),
+                      style: GoogleFonts.nunito(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF856404)),
                     ),
                   ),
                 ],
@@ -288,6 +470,7 @@ class _IntroView extends StatelessWidget {
   }
 }
 
+// ── SCHERMATA FINALE ───────────────────────────────────────────────────────
 class _FinaleView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -295,14 +478,24 @@ class _FinaleView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('\uD83C\uDF89', style: TextStyle(fontSize: 80)),
+          const Text('\uD83C\uDF89',
+              style: TextStyle(fontSize: 80)),
           const SizedBox(height: 16),
           Text('Complimenti!',
-            style: GoogleFonts.nunito(fontSize: 32, fontWeight: FontWeight.w900, color: const Color(0xFF20BF6B))),
+              style: GoogleFonts.nunito(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF20BF6B))),
           const SizedBox(height: 8),
-          Text('Hai costruito tutto!\nSei stato bravissimo \uD83D\uDC4F',
+          Text(
+            'Hai costruito tutto!\nSei stato bravissimo \uD83D\uDC4F',
             textAlign: TextAlign.center,
-            style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF636E72), height: 1.5)),
+            style: GoogleFonts.nunito(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF636E72),
+                height: 1.5),
+          ),
         ],
       ),
     );
