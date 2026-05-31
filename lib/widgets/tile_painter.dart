@@ -42,8 +42,16 @@ class TilePainter extends CustomPainter {
         return Path()
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
 
+      // Quadrato grande con foro quadrato centrale (cornice rossa)
+      // Fedele alla foto: cornice spessa ~18% per lato, foro quadrato centrato
+      case TileShape.squareLargeOpen:
+        final outer = Path()
+          ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
+        final inner = Path()
+          ..addRect(Rect.fromLTWH(w * 0.23, h * 0.23, w * 0.54, h * 0.54));
+        return Path.combine(PathOperation.difference, outer, inner);
+
       // ── RETTANGOLO ─────────────────────────────────────────────────
-      // Rettangolo orizzontale (2:1)
       case TileShape.rectangle:
         return Path()
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.15, w * 0.9, h * 0.7));
@@ -110,15 +118,13 @@ class TilePainter extends CustomPainter {
       // Porta: rettangolo con semicerchio in cima (arco a tutto sesto)
       case TileShape.door:
         final doorPath = Path();
-        final archTop = h * 0.45;   // dove finisce la parte rettangolare
-        final archCx  = w * 0.5;
-        final archCy  = archTop;
-        final archR   = w * 0.3;
+        final archCy = h * 0.45;
+        final archR  = w * 0.3;
         doorPath
           ..moveTo(w * 0.2, h * 0.92)
           ..lineTo(w * 0.2, archCy)
           ..arcTo(
-            Rect.fromCircle(center: Offset(archCx, archCy), radius: archR),
+            Rect.fromCircle(center: Offset(w * 0.5, archCy), radius: archR),
             math.pi,
             -math.pi,
             false,
@@ -127,29 +133,39 @@ class TilePainter extends CustomPainter {
           ..close();
         return doorPath;
 
-      // Finestra: quadrato con griglia interna 2×2 (disegnata come cornice + barre)
+      // Porta pentagonale (apertura a forma di casa): rettangolo + tetto a punta
+      // Fedele alla foto rossa: cornice quadrata, foro interno pentagonale
+      case TileShape.doorPentagon:
+        final dpOuter = Path()
+          ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
+        // foro interno: rettangolo nella metà inferiore + triangolo in cima
+        final dpInner = Path()
+          ..moveTo(w * 0.22, h * 0.88)   // basso sinistra
+          ..lineTo(w * 0.22, h * 0.48)   // sinistra parete verticale
+          ..lineTo(w * 0.50, h * 0.18)   // punta del tetto
+          ..lineTo(w * 0.78, h * 0.48)   // destra parete verticale
+          ..lineTo(w * 0.78, h * 0.88)   // basso destra
+          ..close();
+        return Path.combine(PathOperation.difference, dpOuter, dpInner);
+
+      // Finestra: quadrato con griglia interna 2×2 (cornice + barre)
       case TileShape.window:
         final winPath = Path();
-        // cornice esterna
         winPath.addRect(Rect.fromLTWH(w * 0.1, h * 0.1, w * 0.8, h * 0.8));
-        // barra orizzontale centrale
         winPath.addRect(Rect.fromLTWH(w * 0.1, h * 0.47, w * 0.8, h * 0.06));
-        // barra verticale centrale
         winPath.addRect(Rect.fromLTWH(w * 0.47, h * 0.1, w * 0.06, h * 0.8));
         return winPath;
 
       // ── FUNZIONALI STANDARD ────────────────────────────────────────────
-      // Base macchina: rettangolo orizzontale con 4 cerchietti agli angoli (ruote)
+      // Base macchina: scocca arrotondata + 4 ruote agli angoli
       case TileShape.carBase:
         final carPath = Path();
-        // scocca
         carPath.addRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTWH(w * 0.08, h * 0.25, w * 0.84, h * 0.5),
             const Radius.circular(8),
           ),
         );
-        // 4 ruote
         for (final cx in [w * 0.18, w * 0.82]) {
           for (final cy in [h * 0.22, h * 0.78]) {
             carPath.addOval(
@@ -161,88 +177,77 @@ class TilePainter extends CustomPainter {
 
       // ── CASTLE SPECIAL ───────────────────────────────────────────────
 
-      // Quarto di cerchio: settore circolare a 90°
+      // Quarto di cerchio: settore circolare 90°
       case TileShape.quarterCircle:
         return Path()
           ..moveTo(w * 0.05, h * 0.95)
           ..arcTo(
             Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9),
-            math.pi / 2,   // parte da sinistra in basso
-            -math.pi / 2,  // spazza 90° verso destra in alto
+            math.pi / 2,
+            -math.pi / 2,
             false,
           )
           ..lineTo(w * 0.05, h * 0.95)
           ..close();
 
-      // Ponte levatoio: rettangolo con arco passante (apertura)
+      // Ponte levatoio: cornice con apertura ad arco passante
       case TileShape.drawbridge:
-        final dbPath = Path();
-        // cornice esterna
-        dbPath.addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
-        // apertura ad arco (asporto visivo — disegnato con fill color)
+        final dbPath = Path()
+          ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
         final dbInner = Path()
           ..moveTo(w * 0.25, h * 0.92)
           ..lineTo(w * 0.25, h * 0.5)
           ..arcTo(
-            Rect.fromCircle(
-              center: Offset(w * 0.5, h * 0.5),
-              radius: w * 0.25,
-            ),
-            math.pi,
-            -math.pi,
-            false,
+            Rect.fromCircle(center: Offset(w * 0.5, h * 0.5), radius: w * 0.25),
+            math.pi, -math.pi, false,
           )
           ..lineTo(w * 0.75, h * 0.92)
           ..close();
         return Path.combine(PathOperation.difference, dbPath, dbInner);
 
-      // Scala a spirale: cerchio esterno con spirale interna stilizzata
+      // Scala a spirale: cerchio esterno + cerchi concentrici stilizzati
       case TileShape.spiralStaircase:
         final spPath = Path();
-        // cerchio esterno (torre)
         spPath.addOval(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
-        // spirale stilizzata con 3 cerchi concentrici decrescenti
         spPath.addOval(Rect.fromLTWH(w * 0.2,  h * 0.2,  w * 0.6, h * 0.6));
         spPath.addOval(Rect.fromLTWH(w * 0.35, h * 0.35, w * 0.3, h * 0.3));
         return spPath;
 
-      // Balcone: rettangolo orizzontale con parapetto (linee in cima)
+      // Balcone: piano + parapetto con montanti
       case TileShape.balcony:
         final balPath = Path();
-        // piano del balcone
         balPath.addRect(Rect.fromLTWH(w * 0.05, h * 0.45, w * 0.9, h * 0.4));
-        // parapetto superiore
         balPath.addRect(Rect.fromLTWH(w * 0.05, h * 0.3,  w * 0.9, h * 0.1));
-        // montanti parapetto
         for (double x = 0.15; x < 0.9; x += 0.15) {
           balPath.addRect(Rect.fromLTWH(w * x, h * 0.3, w * 0.04, h * 0.15));
         }
         return balPath;
 
-      // Finestra castle: pannello con apertura ogivale (sesto acuto)
+      // Finestra castle: pannello con apertura ogivale a sesto acuto
       case TileShape.windowCastle:
         final wcOuter = Path()
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
-        // apertura ogivale: due archi che si incontrano in punta
         final wcInner = Path();
-        final cx = w * 0.5;
-        final baseY = h * 0.82;
-        final tipY  = h * 0.15;
-        final halfW = w * 0.22;
+        final cx     = w * 0.5;
+        final baseY  = h * 0.82;
+        final tipY   = h * 0.15;
+        final halfW  = w * 0.22;
         wcInner
           ..moveTo(cx - halfW, baseY)
           ..arcTo(
-            Rect.fromCircle(center: Offset(cx - halfW * 0.35, (baseY + tipY) / 2), radius: halfW * 1.1),
-            math.pi * 0.5,
-            -math.pi * 0.75,
-            false,
+            Rect.fromCircle(
+              center: Offset(cx - halfW * 0.35, (baseY + tipY) / 2),
+              radius: halfW * 1.1,
+            ),
+            math.pi * 0.5, -math.pi * 0.75, false,
           )
           ..lineTo(cx, tipY)
           ..arcTo(
-            Rect.fromCircle(center: Offset(cx + halfW * 0.35, (baseY + tipY) / 2), radius: halfW * 1.1),
-            math.pi * 1.75,
-            -math.pi * 0.75,
-            false,
+            Rect.fromCircle(
+              center: Offset(cx + halfW * 0.35, (baseY + tipY) / 2),
+              radius: halfW * 1.1,
+            ),
+            math.pi * 1.75, -math.pi * 0.75, false,
           )
           ..lineTo(cx + halfW, baseY)
           ..close();
