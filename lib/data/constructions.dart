@@ -11,7 +11,7 @@ final List<Construction> kConstructions = [
   //   Triangolo sx      : base appoggiata sul bordo superiore del quadrato (gy=0)
   //                       centro a gy = -(√3/2)/2 ≈ -0.433, gx = 0.25
   //   Triangolo dx      : speculare, gx = 0.75, gy = -0.433
-  //   rotation=180 → triangolo capovolto (punta verso l'alto) = tetto
+  //   rotation=0 (default) → punta in alto = tetto corretto
   Construction(
     id: 'casa',
     name: 'Casa',
@@ -54,7 +54,6 @@ final List<Construction> kConstructions = [
             tileId: 'triangolo_isoscele_grande',
             gx: 0.25,
             gy: -0.433,
-            rotation: 180,
             isNew: true,
           ),
         ],
@@ -69,13 +68,11 @@ final List<Construction> kConstructions = [
             tileId: 'triangolo_isoscele_grande',
             gx: 0.25,
             gy: -0.433,
-            rotation: 180,
           ),
           PlacedPiece(
             tileId: 'triangolo_isoscele_grande',
             gx: 0.75,
             gy: -0.433,
-            rotation: 180,
             isNew: true,
           ),
         ],
@@ -90,13 +87,11 @@ final List<Construction> kConstructions = [
             tileId: 'triangolo_isoscele_grande',
             gx: 0.25,
             gy: -0.433,
-            rotation: 180,
           ),
           PlacedPiece(
             tileId: 'triangolo_isoscele_grande',
             gx: 0.75,
             gy: -0.433,
-            rotation: 180,
           ),
         ],
       ),
