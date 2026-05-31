@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Modello che rappresenta una singola piastrella magnetica.
 class TileType {
   final String id;
   final String label;
@@ -7,9 +8,19 @@ class TileType {
   final Color color;
   final Color bgColor;
   final TileShape shape;
+
+  /// Categoria d'uso nella costruzione:
+  /// structural  → regge o definisce la struttura
+  /// functional  → serve a far muovere qualcosa o creare percorso
+  /// opening     → ha aperture passanti (porta, finestra, drawbridge)
   final TileCategory category;
-  /// true = la piastrella ha aperture passanti (es. porta, finestra).
-  /// Non usare come base, pavimento, tetto o parete contenitiva.
+
+  /// true = questa piastrella appartiene ai set castle speciali.
+  /// Il bambino deve avere il set castle fisicamente per usarla.
+  final bool isCastleSpecial;
+
+  /// true = la piastrella ha aperture passanti (arco, griglia, foro).
+  /// NON usare come base, pavimento, tetto o parete contenitiva.
   final bool isOpen;
 
   const TileType({
@@ -19,43 +30,50 @@ class TileType {
     required this.color,
     required this.bgColor,
     required this.shape,
-    this.category = TileCategory.standard,
+    required this.category,
+    this.isCastleSpecial = false,
     this.isOpen = false,
   });
 }
 
-enum TileShape {
-  // ── standard ──────────────────────────────────────────
-  squareLarge,
-  squareSmall,
-  rectangle,
-  triangleEquilateral,
-  triangleIsoscaleLarge,
-  triangleIsoscaleSmall,
-  triangleRight,
-  rhombus,
-  pentagon,
-  hexagon,
-  door,
-  window,
-  carBase,
-  // ── castle standard ───────────────────────────────────
-  quarterCircle,
-  glitterSquare,
-  glitterTriangle,
-  // ── castle special ────────────────────────────────────
-  drawbridge,
-  spiralStaircase,
-  balcony,
-  windowCastle,
-  // ── micro ─────────────────────────────────────────────
-  microSquare,
-  microTriangle,
+/// Categoria d'uso della piastrella nella costruzione.
+enum TileCategory {
+  /// Regge o definisce la struttura (muri, tetti, basi solide).
+  structural,
+
+  /// Serve a far muovere qualcosa o creare un percorso (base macchina,
+  /// ponte levatoio come passaggio funzionale).
+  functional,
+
+  /// Ha aperture passanti — non usare come base/tetto/parete contenitiva.
+  opening,
 }
 
-enum TileCategory {
-  standard,
-  castleStandard,
-  castleSpecial,
-  micro,
+/// Forma geometrica della piastrella.
+enum TileShape {
+  // ── forme base standard ──────────────────────────────────────────
+  squareLarge,            // quadrato grande
+  squareSmall,            // quadrato piccolo
+  rectangle,              // rettangolo
+  triangleEquilateral,    // triangolo equilatero
+  triangleIsoscaleLarge,  // triangolo isoscele grande
+  triangleIsoscaleSmall,  // triangolo isoscele piccolo
+  triangleRight,          // triangolo rettangolo
+  rhombus,                // rombo
+  pentagon,               // pentagono
+  hexagon,                // esagono
+
+  // ── aperture standard ────────────────────────────────────────────
+  door,                   // porta (arco passante)
+  window,                 // finestra (griglia passante)
+
+  // ── funzionali standard ──────────────────────────────────────────
+  carBase,                // base macchina con ruote
+
+  // ── forme castle (isCastleSpecial: true) ─────────────────────────
+  quarterCircle,          // quarto di cerchio — arco/torre
+  drawbridge,             // ponte levatoio — apertura passante
+  spiralStaircase,        // scala a spirale
+  balcony,                // balcone — sporgenza architettonica
+  windowCastle,           // finestra castle — ridisegnata per castelli
 }

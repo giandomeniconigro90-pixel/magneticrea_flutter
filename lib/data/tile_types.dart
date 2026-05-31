@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/tile_type.dart';
 
+/// Lista completa di tutte le piastrelle disponibili nell'app.
+/// Aggiungere qui ogni nuovo tile mantenendo i commenti di sezione.
 const List<TileType> kTileTypes = [
 
-  // ── QUADRATI ──────────────────────────────────────────────────────
+  // ── QUADRATI ─────────────────────────────────────────────────────
   TileType(
     id: 'quadrato_grande',
     label: 'Quadrato Grande',
@@ -11,7 +13,7 @@ const List<TileType> kTileTypes = [
     color: Color(0xFFFF6B6B),
     bgColor: Color(0xFFFFF0F0),
     shape: TileShape.squareLarge,
-    isOpen: false,
+    category: TileCategory.structural,
   ),
   TileType(
     id: 'quadrato_piccolo',
@@ -20,10 +22,10 @@ const List<TileType> kTileTypes = [
     color: Color(0xFFFF9F43),
     bgColor: Color(0xFFFFF4E6),
     shape: TileShape.squareSmall,
-    isOpen: false,
+    category: TileCategory.structural,
   ),
 
-  // ── RETTANGOLO ────────────────────────────────────────────────────
+  // ── RETTANGOLO ───────────────────────────────────────────────────
   TileType(
     id: 'rettangolo',
     label: 'Rettangolo',
@@ -31,10 +33,10 @@ const List<TileType> kTileTypes = [
     color: Color(0xFF26D0CE),
     bgColor: Color(0xFFE5FFFD),
     shape: TileShape.rectangle,
-    isOpen: false,
+    category: TileCategory.structural,
   ),
 
-  // ── TRIANGOLI ─────────────────────────────────────────────────────
+  // ── TRIANGOLI ────────────────────────────────────────────────────
   TileType(
     id: 'triangolo_equilatero',
     label: 'Triangolo Equilatero',
@@ -42,7 +44,7 @@ const List<TileType> kTileTypes = [
     color: Color(0xFF20BF6B),
     bgColor: Color(0xFFE8FFF2),
     shape: TileShape.triangleEquilateral,
-    isOpen: false,
+    category: TileCategory.structural,
   ),
   TileType(
     id: 'triangolo_isoscele_grande',
@@ -51,7 +53,7 @@ const List<TileType> kTileTypes = [
     color: Color(0xFF45AAF2),
     bgColor: Color(0xFFE3F4FF),
     shape: TileShape.triangleIsoscaleLarge,
-    isOpen: false,
+    category: TileCategory.structural,
   ),
   TileType(
     id: 'triangolo_isoscele_piccolo',
@@ -60,7 +62,7 @@ const List<TileType> kTileTypes = [
     color: Color(0xFF2BCBBA),
     bgColor: Color(0xFFE5FFFD),
     shape: TileShape.triangleIsoscaleSmall,
-    isOpen: false,
+    category: TileCategory.structural,
   ),
   TileType(
     id: 'triangolo_rettangolo',
@@ -69,10 +71,10 @@ const List<TileType> kTileTypes = [
     color: Color(0xFFA55EEA),
     bgColor: Color(0xFFF5E6FF),
     shape: TileShape.triangleRight,
-    isOpen: false,
+    category: TileCategory.structural,
   ),
 
-  // ── POLIGONI ──────────────────────────────────────────────────────
+  // ── POLIGONI ─────────────────────────────────────────────────────
   TileType(
     id: 'rombo',
     label: 'Rombo',
@@ -80,7 +82,7 @@ const List<TileType> kTileTypes = [
     color: Color(0xFFFC5C65),
     bgColor: Color(0xFFFFE5E7),
     shape: TileShape.rhombus,
-    isOpen: false,
+    category: TileCategory.structural,
   ),
   TileType(
     id: 'pentagono',
@@ -89,7 +91,7 @@ const List<TileType> kTileTypes = [
     color: Color(0xFFFD9644),
     bgColor: Color(0xFFFFF3E5),
     shape: TileShape.pentagon,
-    isOpen: false,
+    category: TileCategory.structural,
   ),
   TileType(
     id: 'esagono',
@@ -98,10 +100,11 @@ const List<TileType> kTileTypes = [
     color: Color(0xFF4B7BEC),
     bgColor: Color(0xFFE8EEFF),
     shape: TileShape.hexagon,
-    isOpen: false,
+    category: TileCategory.structural,
   ),
 
-  // ── PIASTRELLE CON APERTURA (isOpen: true) ────────────────────────
+  // ── APERTURE (isOpen: true) ───────────────────────────────────────
+  // Regola: NON usare come base, tetto o parete contenitiva.
   TileType(
     id: 'porta',
     label: 'Porta',
@@ -109,6 +112,7 @@ const List<TileType> kTileTypes = [
     color: Color(0xFFE84393),
     bgColor: Color(0xFFFFE5F3),
     shape: TileShape.door,
+    category: TileCategory.opening,
     isOpen: true,
   ),
   TileType(
@@ -118,10 +122,11 @@ const List<TileType> kTileTypes = [
     color: Color(0xFFE84393),
     bgColor: Color(0xFFFFE5F3),
     shape: TileShape.window,
+    category: TileCategory.opening,
     isOpen: true,
   ),
 
-  // ── PEZZI SPECIALI ────────────────────────────────────────────────
+  // ── FUNZIONALI ───────────────────────────────────────────────────
   TileType(
     id: 'base_macchina',
     label: 'Base Macchina',
@@ -129,42 +134,26 @@ const List<TileType> kTileTypes = [
     color: Color(0xFF45AAF2),
     bgColor: Color(0xFFE3F4FF),
     shape: TileShape.carBase,
-    isOpen: false,
+    category: TileCategory.functional,
   ),
 
-  // ── CASTLE STANDARD ───────────────────────────────────────────────
+  // ── CASTLE SPECIAL (isCastleSpecial: true) ───────────────────────
+  // Questi pezzi sono esclusivi dei set castle MAGNA-TILES.
+  // Il bambino deve avere fisicamente il set castle per usarli.
+
+  // Strutturale castle: quarto di cerchio per archi e torri
   TileType(
     id: 'quarter_circle_castle',
-    label: 'Quarto di Cerchio Castle',
+    label: 'Quarto di Cerchio',
     short: 'Quarto Cerchio',
     color: Color(0xFFD980FA),
     bgColor: Color(0xFFFAE5FF),
     shape: TileShape.quarterCircle,
-    category: TileCategory.castleStandard,
-    isOpen: false,
-  ),
-  TileType(
-    id: 'glitter_square',
-    label: 'Quadrato Glitter',
-    short: 'Quadrato Glitter',
-    color: Color(0xFFFFD700),
-    bgColor: Color(0xFFFFFBE6),
-    shape: TileShape.glitterSquare,
-    category: TileCategory.castleStandard,
-    isOpen: false,
-  ),
-  TileType(
-    id: 'glitter_triangle',
-    label: 'Triangolo Glitter',
-    short: 'Triangolo Glitter',
-    color: Color(0xFFFFD700),
-    bgColor: Color(0xFFFFFBE6),
-    shape: TileShape.glitterTriangle,
-    category: TileCategory.castleStandard,
-    isOpen: false,
+    category: TileCategory.structural,
+    isCastleSpecial: true,
   ),
 
-  // ── CASTLE SPECIAL ────────────────────────────────────────────────
+  // Apertura castle: ponte levatoio — apertura passante funzionale
   TileType(
     id: 'drawbridge',
     label: 'Ponte Levatoio',
@@ -172,9 +161,12 @@ const List<TileType> kTileTypes = [
     color: Color(0xFF8B572A),
     bgColor: Color(0xFFF5EDE3),
     shape: TileShape.drawbridge,
-    category: TileCategory.castleSpecial,
-    isOpen: true,   // apertura passante — non usare come base/tetto/parete contenitiva
+    category: TileCategory.opening,
+    isCastleSpecial: true,
+    isOpen: true, // apertura passante — non usare come base/tetto/parete contenitiva
   ),
+
+  // Strutturale castle: scala a spirale per accesso interno/esterno
   TileType(
     id: 'spiral_staircase',
     label: 'Scala a Spirale',
@@ -182,9 +174,11 @@ const List<TileType> kTileTypes = [
     color: Color(0xFFE8A0BF),
     bgColor: Color(0xFFFFF0F7),
     shape: TileShape.spiralStaircase,
-    category: TileCategory.castleSpecial,
-    isOpen: false,
+    category: TileCategory.structural,
+    isCastleSpecial: true,
   ),
+
+  // Strutturale castle: balcone — sporgenza architettonica
   TileType(
     id: 'balcony',
     label: 'Balcone',
@@ -192,9 +186,11 @@ const List<TileType> kTileTypes = [
     color: Color(0xFFB8860B),
     bgColor: Color(0xFFFFF8E1),
     shape: TileShape.balcony,
-    category: TileCategory.castleSpecial,
-    isOpen: false,
+    category: TileCategory.structural,
+    isCastleSpecial: true,
   ),
+
+  // Apertura castle: finestra ridisegnata per castelli
   TileType(
     id: 'window_castle',
     label: 'Finestra Castle',
@@ -202,33 +198,13 @@ const List<TileType> kTileTypes = [
     color: Color(0xFF9B59B6),
     bgColor: Color(0xFFF5E6FF),
     shape: TileShape.windowCastle,
-    category: TileCategory.castleSpecial,
-    isOpen: true,   // apertura decorativa — non usare come base/tetto/parete contenitiva
-  ),
-
-  // ── MICRO ─────────────────────────────────────────────────────────
-  TileType(
-    id: 'micro_square',
-    label: 'Micro Quadrato',
-    short: 'microMAGS Q',
-    color: Color(0xFFFF6B6B),
-    bgColor: Color(0xFFFFF0F0),
-    shape: TileShape.microSquare,
-    category: TileCategory.micro,
-    isOpen: false,
-  ),
-  TileType(
-    id: 'micro_triangle',
-    label: 'Micro Triangolo',
-    short: 'microMAGS T',
-    color: Color(0xFF45AAF2),
-    bgColor: Color(0xFFE3F4FF),
-    shape: TileShape.microTriangle,
-    category: TileCategory.micro,
-    isOpen: false,
+    category: TileCategory.opening,
+    isCastleSpecial: true,
+    isOpen: true, // apertura decorativa — non usare come base/tetto/parete contenitiva
   ),
 ];
 
+/// Cerca un tile per id. Ritorna null se non trovato.
 TileType? tileById(String id) {
   try {
     return kTileTypes.firstWhere((t) => t.id == id);
@@ -237,6 +213,14 @@ TileType? tileById(String id) {
   }
 }
 
-/// Ritorna solo i tile di una categoria specifica
+/// Ritorna i tile filtrati per categoria d'uso.
 List<TileType> tilesByCategory(TileCategory category) =>
     kTileTypes.where((t) => t.category == category).toList();
+
+/// Ritorna solo i tile dei set castle speciali.
+List<TileType> get castleSpecialTiles =>
+    kTileTypes.where((t) => t.isCastleSpecial).toList();
+
+/// Ritorna solo i tile base (non castle).
+List<TileType> get standardTiles =>
+    kTileTypes.where((t) => !t.isCastleSpecial).toList();

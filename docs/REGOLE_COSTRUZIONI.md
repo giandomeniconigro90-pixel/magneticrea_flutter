@@ -18,23 +18,65 @@
 
 ## 🧱 Le Piastrelle Disponibili (`tile_types.dart`)
 
-Ogni piastrella ha un `id` univoco, una forma (`TileShape`), un colore e la proprietà `isOpen`.
+Ogni piastrella ha un `id` univoco, una forma (`TileShape`), un colore, una `category` d'uso, il flag `isCastleSpecial` e la proprietà `isOpen`.
 
-| ID | Nome | Shape | Colore | isOpen |
-|---|---|---|---|---|
-| `quadrato_grande` | Quadrato Grande | `squareLarge` | Rosso `#FF6B6B` | false |
-| `quadrato_piccolo` | Quadrato Piccolo | `squareSmall` | Arancio `#FF9F43` | false |
-| `rettangolo` | Rettangolo | `rectangle` | Verde acqua `#26D0CE` | false |
-| `triangolo_equilatero` | Triangolo Equilatero | `triangleEquilateral` | Verde `#20BF6B` | false |
-| `triangolo_isoscele_grande` | Triangolo Isoscele Grande | `triangleIsoscaleLarge` | Blu `#45AAF2` | false |
-| `triangolo_isoscele_piccolo` | Triangolo Isoscele Piccolo | `triangleIsoscaleSmall` | Celeste `#2BCBBA` | false |
-| `triangolo_rettangolo` | Triangolo Rettangolo | `triangleRight` | Viola `#A55EEA` | false |
-| `rombo` | Rombo | `rhombus` | Rosso acceso `#FC5C65` | false |
-| `pentagono` | Pentagono | `pentagon` | Arancio `#FD9644` | false |
-| `esagono` | Esagono | `hexagon` | Blu `#4B7BEC` | false |
-| `porta` | Porta | `door` | Rosa `#E84393` | **true** ⚠️ |
-| `finestra` | Finestra | `window` | Rosa `#E84393` | **true** ⚠️ |
-| `base_macchina` | Base Macchina | `carBase` | Azzurro `#45AAF2` | false |
+### Piastrelle Standard
+
+| ID | Nome | Shape | Colore | Category | isOpen |
+|---|---|---|---|---|---|
+| `quadrato_grande` | Quadrato Grande | `squareLarge` | Rosso `#FF6B6B` | structural | false |
+| `quadrato_piccolo` | Quadrato Piccolo | `squareSmall` | Arancio `#FF9F43` | structural | false |
+| `rettangolo` | Rettangolo | `rectangle` | Verde acqua `#26D0CE` | structural | false |
+| `triangolo_equilatero` | Triangolo Equilatero | `triangleEquilateral` | Verde `#20BF6B` | structural | false |
+| `triangolo_isoscele_grande` | Triangolo Isoscele Grande | `triangleIsoscaleLarge` | Blu `#45AAF2` | structural | false |
+| `triangolo_isoscele_piccolo` | Triangolo Isoscele Piccolo | `triangleIsoscaleSmall` | Celeste `#2BCBBA` | structural | false |
+| `triangolo_rettangolo` | Triangolo Rettangolo | `triangleRight` | Viola `#A55EEA` | structural | false |
+| `rombo` | Rombo | `rhombus` | Rosso acceso `#FC5C65` | structural | false |
+| `pentagono` | Pentagono | `pentagon` | Arancio `#FD9644` | structural | false |
+| `esagono` | Esagono | `hexagon` | Blu `#4B7BEC` | structural | false |
+| `porta` | Porta | `door` | Rosa `#E84393` | opening | **true** ⚠️ |
+| `finestra` | Finestra | `window` | Rosa `#E84393` | opening | **true** ⚠️ |
+| `base_macchina` | Base Macchina | `carBase` | Azzurro `#45AAF2` | functional | false |
+
+### Piastrelle Castle Special (`isCastleSpecial: true`)
+
+> ⚠️ Richiedono il **set castle fisico** (MAGNA-TILES Castle / Castle DLX).
+
+| ID | Nome | Shape | Colore | Category | isOpen |
+|---|---|---|---|---|---|
+| `quarter_circle_castle` | Quarto di Cerchio | `quarterCircle` | Viola `#D980FA` | structural | false |
+| `drawbridge` | Ponte Levatoio | `drawbridge` | Marrone `#8B572A` | opening | **true** ⚠️ |
+| `spiral_staircase` | Scala a Spirale | `spiralStaircase` | Rosa `#E8A0BF` | structural | false |
+| `balcony` | Balcone | `balcony` | Oro `#B8860B` | structural | false |
+| `window_castle` | Finestra Castle | `windowCastle` | Viola `#9B59B6` | opening | **true** ⚠️ |
+
+---
+
+## 🗂️ Categorie d'Uso (`TileCategory`)
+
+Ogni piastrella ha una categoria che ne definisce il ruolo nella costruzione.
+
+| Categoria | Significato | Esempi |
+|---|---|---|
+| `structural` | Regge o definisce la struttura | quadrati, triangoli, rombo, balcone, scala |
+| `functional` | Serve a far muovere qualcosa o creare un percorso | base_macchina, drawbridge |
+| `opening` | Ha aperture passanti — non usare come base/tetto/parete contenitiva | porta, finestra, window_castle, drawbridge |
+
+> 💡 `drawbridge` è sia `opening` (categoria) che `functional` per natura: appartiene alla categoria `opening` perché ha un'apertura passante.
+
+---
+
+## 🏰 Flag `isCastleSpecial`
+
+- `isCastleSpecial: true` → il bambino **deve avere il set castle fisico** per usare questo pezzo
+- `isCastleSpecial: false` → pezzo standard, disponibile in qualsiasi set base
+
+Helper disponibili in `tile_types.dart`:
+```dart
+castleSpecialTiles   // lista dei soli pezzi castle
+standardTiles        // lista dei soli pezzi base
+tilesByCategory(TileCategory.structural)  // filtra per uso
+```
 
 ---
 
@@ -57,8 +99,10 @@ La proprietà `isOpen: true` indica che la piastrella ha **aperture passanti** (
 |---|---|
 | `porta` | Arco passante nella metà inferiore |
 | `finestra` | Griglia 2×2 passante al centro |
+| `drawbridge` | Apertura passante funzionale (ponte levatoio) |
+| `window_castle` | Apertura decorativa ridisegnata per castelli |
 
-> 💡 **Regola pratica AI:** Prima di assegnare `porta` o `finestra` a uno step, verifica che il ruolo strutturale lo permetta.
+> 💡 **Regola pratica AI:** Prima di assegnare un tile `isOpen: true` a uno step, verifica che il ruolo strutturale lo permetta.
 
 ---
 
@@ -185,19 +229,25 @@ maxCameraOrbit: 'auto auto 20m'
 ### Colori nei GLB (`genera_modelli_3d.py`)
 ```python
 COLORS = {
-    'quadrato_grande':           (1.0,  0.42, 0.42, 1),  # rosso
-    'quadrato_piccolo':          (1.0,  0.62, 0.26, 1),  # arancio
-    'rettangolo':                (0.15, 0.82, 0.80, 1),  # verde acqua
-    'triangolo_isoscele_grande': (0.27, 0.67, 0.95, 1),  # blu
-    'triangolo_isoscele_piccolo':(0.17, 0.80, 0.73, 1),  # celeste
-    'triangolo_equilatero':      (0.13, 0.75, 0.42, 1),  # verde
-    'triangolo_rettangolo':      (0.65, 0.37, 0.92, 1),  # viola
-    'rombo':                     (0.99, 0.36, 0.40, 1),  # rosso acceso
-    'pentagono':                 (0.99, 0.59, 0.27, 1),  # arancio
-    'esagono':                   (0.29, 0.48, 0.93, 1),  # blu
-    'porta':                     (0.91, 0.26, 0.58, 1),  # rosa
-    'finestra':                  (0.91, 0.26, 0.58, 1),  # rosa
-    'base_macchina':             (0.27, 0.67, 0.95, 1),  # azzurro
+    'quadrato_grande':            (1.0,  0.42, 0.42, 1),  # rosso
+    'quadrato_piccolo':           (1.0,  0.62, 0.26, 1),  # arancio
+    'rettangolo':                 (0.15, 0.82, 0.80, 1),  # verde acqua
+    'triangolo_isoscele_grande':  (0.27, 0.67, 0.95, 1),  # blu
+    'triangolo_isoscele_piccolo': (0.17, 0.80, 0.73, 1),  # celeste
+    'triangolo_equilatero':       (0.13, 0.75, 0.42, 1),  # verde
+    'triangolo_rettangolo':       (0.65, 0.37, 0.92, 1),  # viola
+    'rombo':                      (0.99, 0.36, 0.40, 1),  # rosso acceso
+    'pentagono':                  (0.99, 0.59, 0.27, 1),  # arancio
+    'esagono':                    (0.29, 0.48, 0.93, 1),  # blu
+    'porta':                      (0.91, 0.26, 0.58, 1),  # rosa
+    'finestra':                   (0.91, 0.26, 0.58, 1),  # rosa
+    'base_macchina':              (0.27, 0.67, 0.95, 1),  # azzurro
+    # castle special
+    'quarter_circle_castle':      (0.85, 0.50, 0.98, 1),  # viola chiaro
+    'drawbridge':                 (0.55, 0.35, 0.17, 1),  # marrone
+    'spiral_staircase':           (0.91, 0.63, 0.75, 1),  # rosa antico
+    'balcony':                    (0.72, 0.52, 0.04, 1),  # oro
+    'window_castle':              (0.61, 0.35, 0.71, 1),  # viola scuro
 }
 ```
 
@@ -228,6 +278,7 @@ blender --background --python scripts/genera_modelli_3d.py
 |---|---|
 | `add_quad_wall(name, cx, cy, cz, face, is_new)` | Pannello quadrato (muro) |
 | `add_tri_roof_pyramid(side, base_z, apex_z, is_new)` | Triangolo tetto a piramide |
+| `add_rect_wall(name, cx, cy, cz, face, is_new, tile_id, w, h)` | Pannello rettangolare |
 | `quad_old(face, piano)` | Helper: pannello già posato al piano N |
 | `quad_new(face, piano)` | Helper: pannello nuovo al piano N |
 
@@ -303,6 +354,8 @@ blender --background --python scripts/genera_modelli_3d.py
 - [ ] **Toggle 2D/3D** nella `GuideScreen` per costruzioni con `is3d: true`
 - [ ] Fix `_glbPath()` in `guide_screen.dart` — deve rispettare il flag `is3d`
 - [ ] Convertire le costruzioni marcate ⚠️ in 2D+3D (casa, razzo, barca, albero, elicottero, treno, drago)
+- [ ] UI: mostrare badge 🏰 sui tile `isCastleSpecial: true`
+- [ ] UI: filtro per categoria (`structural` / `functional` / `opening`)
 
 ---
 
@@ -352,5 +405,5 @@ Python:           3.x (script Blender)
 
 ---
 
-*Documento aggiornato il 31 maggio 2026 — aggiunta proprietà isOpen, nuove piastrelle: rettangolo, porta, finestra, base_macchina.*
+*Documento aggiornato il 31 maggio 2026 — refactor categorie tile, aggiunta isCastleSpecial, nuovi tile castle: quarter_circle_castle, drawbridge, spiral_staircase, balcony, window_castle.*
 *Aggiornare questo file ogni volta che si aggiungono costruzioni o si modificano le regole.*
