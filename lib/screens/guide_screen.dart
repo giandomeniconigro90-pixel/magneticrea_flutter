@@ -76,7 +76,14 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
                   : isFirst
                       ? _IntroView(construction: construction)
                       : tile != null
-                          ? _Viewer3D(tileId: tile.id, color: tile.color, count: newCount > 0 ? newCount : 1, label: tile.label, action: step.action)
+                          ? _Viewer3D(
+                              key: ValueKey('${widget.constructionId}_${_currentStep}_${tile.id}'),
+                              tileId: tile.id,
+                              color: tile.color,
+                              count: newCount > 0 ? newCount : 1,
+                              label: tile.label,
+                              action: step.action,
+                            )
                           : _IntroView(construction: construction),
             ),
           ),
@@ -141,6 +148,7 @@ class _Viewer3D extends StatelessWidget {
   final String action;
 
   const _Viewer3D({
+    super.key,
     required this.tileId,
     required this.color,
     required this.count,
