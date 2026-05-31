@@ -7,6 +7,7 @@ import '../data/tile_types.dart';
 import '../models/build_step.dart';
 import '../models/tile_type.dart';
 import '../widgets/tile_painter.dart';
+import '../widgets/grid_schema_painter.dart';
 
 class GuideScreen extends StatefulWidget {
   final String constructionId;
@@ -72,8 +73,9 @@ class _GuideScreenState extends State<GuideScreen>
     final isFirst  = _currentStep == 0;
     final tile     = step.tileId != null ? tileById(step.tileId!) : null;
     final progress = (_currentStep + 1) / steps.length;
-    final newCount = step.placedPieces.where((p) => p.isNew == true).length;
+    final newCount = step.placedPieces.where((p) => p.isNew).length;
     final glbPath  = _glbPath(_currentStep);
+    final usesGrid = step.placedPieces.any((p) => p.usesGrid);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4FF),
@@ -108,6 +110,7 @@ class _GuideScreenState extends State<GuideScreen>
                           pulseAnim: _pulseAnim,
                           constructionId: widget.constructionId,
                           glbPath: glbPath,
+                          usesGrid: usesGrid,
                         ),
             ),
           ),
@@ -184,6 +187,7 @@ class _StepView extends StatelessWidget {
   final Animation<double> pulseAnim;
   final String constructionId;
   final String? glbPath;
+  final bool usesGrid;
 
   const _StepView({
     super.key,
@@ -193,13 +197,13 @@ class _StepView extends StatelessWidget {
     required this.pulseAnim,
     required this.constructionId,
     required this.glbPath,
+    required this.usesGrid,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // ── Banner azione ──────────────────────────────────────────────
         Container(
           margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -259,28 +263,29 @@ class _StepView extends StatelessWidget {
             ],
           ),
         ),
-        // ── Area visuale ───────────────────────────────────────────────
         Expanded(
-          child: glbPath != null
-              ? _Viewer3D(glbPath: glbPath!, tileColor: tile?.color)
-              : _ProgressSchema(step: step, pulseAnim: pulseAnim),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: glbPath != null
+                ? _Viewer3D(glbPath: glbPath!, tileColor: tile?.color)
+                : usesGrid
+                    ? GridSchemaPainter(step: step, pulseAnim: pulseAnim)
+                    : _ProgressSchema(step: step, pulseAnim: pulseAnim),
+          ),
         ),
       ],
     );
   }
 }
 
-// ── Viewer 3D ────────────────────────────────────────────────────────────────
 class _Viewer3D extends StatelessWidget {
   final String glbPath;
   final Color? tileColor;
-
   const _Viewer3D({required this.glbPath, this.tileColor});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -316,14 +321,10 @@ class _Viewer3D extends StatelessWidget {
   }
 }
 
-// ── Schema 2D ─────────────────────────────────────────────────────────────────
-// Usa un canvas QUADRATO centrato pari a min(w, h) con padding del 10%.
-// Tutti i pezzi vengono scalati e posizionati rispetto a questo quadrato,
-// quindi sono sempre visibili indipendentemente dall'aspect ratio dello schermo.
+// Legacy renderer (costruzioni non ancora migrate alla griglia)
 class _ProgressSchema extends StatelessWidget {
   final BuildStep step;
   final Animation<double> pulseAnim;
-
   const _ProgressSchema({required this.step, required this.pulseAnim});
 
   @override
@@ -331,17 +332,12 @@ class _ProgressSchema extends StatelessWidget {
     return LayoutBuilder(builder: (context, constraints) {
       final availW = constraints.maxWidth;
       final availH = constraints.maxHeight;
-
-      // Canvas quadrato centrato
       final side    = min(availW, availH) * 0.92;
       final offsetX = (availW - side) / 2;
       final offsetY = (availH - side) / 2;
-
-      // Dimensione base pezzo: ~16% del lato del canvas
       final baseSize = side * 0.16;
 
       return Container(
-        margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -353,47 +349,31 @@ class _ProgressSchema extends StatelessWidget {
             children: step.placedPieces.map((piece) {
               final tile = tileById(piece.tileId);
               if (tile == null) return const SizedBox.shrink();
-
-              final isNew = piece.isNew == true;
-
-              // Fattore di scala per forma
+              final isNew = piece.isNew;
               final scaleFactor = _shapeScale(tile.shape);
               final size = baseSize * scaleFactor;
-
-              final color = isNew
-                  ? tile.color
-                  : tile.color.withOpacity(0.38);
-
-              // Posizione: le coordinate (0..1) mappate sul canvas quadrato
+              final color = isNew ? tile.color : tile.color.withOpacity(0.38);
               final cx = offsetX + piece.x * side;
               final cy = offsetY + piece.y * side;
 
-              Widget pieceWidget = CustomPaint(
+              Widget pw = CustomPaint(
                 size: Size(size, size),
                 painter: TilePainter(shape: tile.shape, color: color),
               );
-
-              if (piece.rotation != null && piece.rotation != 0) {
-                pieceWidget = Transform.rotate(
-                  angle: (piece.rotation! * pi) / 180,
-                  child: pieceWidget,
-                );
+              if (piece.rotation != 0) {
+                pw = Transform.rotate(
+                    angle: (piece.rotation * pi) / 180, child: pw);
               }
-
               if (isNew) {
-                pieceWidget = AnimatedBuilder(
+                pw = AnimatedBuilder(
                   animation: pulseAnim,
-                  builder: (_, child) => Transform.scale(
-                      scale: pulseAnim.value, child: child),
-                  child: pieceWidget,
+                  builder: (_, child) =>
+                      Transform.scale(scale: pulseAnim.value, child: child),
+                  child: pw,
                 );
               }
-
               return Positioned(
-                left: cx - size / 2,
-                top:  cy - size / 2,
-                child: pieceWidget,
-              );
+                  left: cx - size / 2, top: cy - size / 2, child: pw);
             }).toList(),
           ),
         ),
@@ -403,33 +383,18 @@ class _ProgressSchema extends StatelessWidget {
 
   double _shapeScale(TileShape shape) {
     switch (shape) {
-      case TileShape.squareLarge:
-        return 1.30;
-      case TileShape.hexagon:
-        return 1.20;
-      case TileShape.triangleIsoscaleLarge:
-        return 1.20;
-      case TileShape.pentagon:
-        return 1.10;
-      case TileShape.squareLargeOpen:
-        return 1.30;
-      case TileShape.squareSmall:
-        return 0.85;
-      case TileShape.triangleIsoscaleSmall:
-        return 0.75;
-      case TileShape.rhombus:
-        return 1.00;
-      case TileShape.triangleEquilateral:
-        return 1.00;
-      case TileShape.triangleRight:
-        return 1.00;
-      default:
-        return 1.00;
+      case TileShape.squareLarge: return 1.30;
+      case TileShape.hexagon: return 1.20;
+      case TileShape.triangleIsoscaleLarge: return 1.20;
+      case TileShape.pentagon: return 1.10;
+      case TileShape.squareLargeOpen: return 1.30;
+      case TileShape.squareSmall: return 0.85;
+      case TileShape.triangleIsoscaleSmall: return 0.75;
+      default: return 1.00;
     }
   }
 }
 
-// ── Intro ─────────────────────────────────────────────────────────────────────
 class _IntroView extends StatelessWidget {
   final dynamic construction;
   const _IntroView({required this.construction});
@@ -442,47 +407,35 @@ class _IntroView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(construction.emoji,
-                style: const TextStyle(fontSize: 80)),
+            Text(construction.emoji, style: const TextStyle(fontSize: 80)),
             const SizedBox(height: 20),
-            Text(
-              construction.name,
-              style: GoogleFonts.nunito(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF2D3436)),
-            ),
+            Text(construction.name,
+                style: GoogleFonts.nunito(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF2D3436))),
             const SizedBox(height: 12),
-            Text(
-              construction.description,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.nunito(
-                  fontSize: 15,
-                  color: const Color(0xFF636E72),
-                  height: 1.5),
-            ),
+            Text(construction.description,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.nunito(
+                    fontSize: 15, color: const Color(0xFF636E72), height: 1.5)),
             const SizedBox(height: 20),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF3CD),
-                borderRadius: BorderRadius.circular(16),
-              ),
+                  color: const Color(0xFFFFF3CD),
+                  borderRadius: BorderRadius.circular(16)),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('\uD83D\uDCA1',
-                      style: TextStyle(fontSize: 18)),
+                  const Text('\uD83D\uDCA1', style: TextStyle(fontSize: 18)),
                   const SizedBox(width: 8),
                   Flexible(
-                    child: Text(
-                      construction.tip,
-                      style: GoogleFonts.nunito(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF856404)),
-                    ),
+                    child: Text(construction.tip,
+                        style: GoogleFonts.nunito(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF856404))),
                   ),
                 ],
               ),
@@ -494,7 +447,6 @@ class _IntroView extends StatelessWidget {
   }
 }
 
-// ── Finale ────────────────────────────────────────────────────────────────────
 class _FinaleView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -502,8 +454,7 @@ class _FinaleView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('\uD83C\uDF89',
-              style: TextStyle(fontSize: 80)),
+          const Text('\uD83C\uDF89', style: TextStyle(fontSize: 80)),
           const SizedBox(height: 16),
           Text('Complimenti!',
               style: GoogleFonts.nunito(
@@ -511,15 +462,13 @@ class _FinaleView extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                   color: const Color(0xFF20BF6B))),
           const SizedBox(height: 8),
-          Text(
-            'Hai costruito tutto!\nSei stato bravissimo \uD83D\uDC4F',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.nunito(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF636E72),
-                height: 1.5),
-          ),
+          Text('Hai costruito tutto!\nSei stato bravissimo \uD83D\uDC4F',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.nunito(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF636E72),
+                  height: 1.5)),
         ],
       ),
     );

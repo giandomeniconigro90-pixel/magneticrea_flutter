@@ -1,12 +1,9 @@
 /// Un singolo passo della guida di costruzione.
-/// [tileId] è null se il passo non coinvolge un pezzo specifico (es. intro/finale).
-/// [placedTileIds] è la lista di tutti i pezzi già posizionati fino a questo passo
-/// (usata per disegnare lo schema progressivo animato).
 class BuildStep {
   final int stepNumber;
-  final String? tileId;       // pezzo da aggiungere in questo passo
-  final String action;        // testo breve per il bambino
-  final List<PlacedPiece> placedPieces; // posizioni di tutti i pezzi già messi
+  final String? tileId;
+  final String action;
+  final List<PlacedPiece> placedPieces;
 
   const BuildStep({
     required this.stepNumber,
@@ -16,21 +13,41 @@ class BuildStep {
   });
 }
 
-/// Pezzo già posizionato nello schema progressivo.
+/// Pezzo posizionato nello schema.
+///
+/// Sistema GRIGLIA (preferito):
+///   [gx], [gy] = coordinate in "unità logiche" dove 1 unità = lato quadrato grande.
+///   Il renderer calcola automaticamente pixel/unità e centra il bounding box.
+///   Usare questo sistema per costruzioni nuove o corrette.
+///
+/// Sistema LEGACY (0.0–1.0):
+///   [x], [y] = posizione relativa nel canvas (0=sinistra/alto, 1=destra/basso).
+///   Mantenuto per retrocompatibilità.
 class PlacedPiece {
   final String tileId;
-  final double x;       // posizione relativa 0.0–1.0 nel canvas
+
+  // ── Sistema griglia ──────────────────────────────────────────
+  final double? gx; // colonna in unità logiche (null = usa legacy x/y)
+  final double? gy; // riga in unità logiche
+
+  // ── Sistema legacy ───────────────────────────────────────────
+  final double x;
   final double y;
+
   final double rotation; // gradi
   final double scale;
-  final bool isNew;     // true = pezzo aggiunto in questo passo (evidenziato)
+  final bool isNew;
 
   const PlacedPiece({
     required this.tileId,
-    required this.x,
-    required this.y,
+    this.gx,
+    this.gy,
+    this.x = 0.5,
+    this.y = 0.5,
     this.rotation = 0,
     this.scale = 1.0,
     this.isNew = false,
   });
+
+  bool get usesGrid => gx != null && gy != null;
 }
