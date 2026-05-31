@@ -68,7 +68,6 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
       ),
       body: Column(
         children: [
-          // ── ZONA PRINCIPALE ──────────────────────────────────────
           Expanded(
             child: FadeTransition(
               opacity: _fadeAnim,
@@ -81,12 +80,10 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
                           : _IntroView(construction: construction),
             ),
           ),
-          // ── NAVIGAZIONE ──────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
             child: Row(
               children: [
-                // Indicatore passo
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
@@ -108,7 +105,7 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: Text('← Indietro', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                      child: Text('\u2190 Indietro', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
                     ),
                   ),
                 if (_currentStep > 0) const SizedBox(width: 12),
@@ -122,7 +119,7 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
                       backgroundColor: isLast ? const Color(0xFF20BF6B) : const Color(0xFF4B7BEC),
                     ),
                     child: Text(
-                      isLast ? '🎉 Finito!' : 'Avanti →',
+                      isLast ? '\uD83C\uDF89 Finito!' : 'Avanti \u2192',
                       style: GoogleFonts.nunito(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 16),
                     ),
                   ),
@@ -136,7 +133,6 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
   }
 }
 
-// ── VISUALIZZATORE 3D del pezzo da aggiungere ────────────────────────────────
 class _Viewer3D extends StatelessWidget {
   final String tileId;
   final Color color;
@@ -156,7 +152,6 @@ class _Viewer3D extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Testo istruzione
         Container(
           margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -170,7 +165,7 @@ class _Viewer3D extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                child: Text(‘👀’, style: const TextStyle(fontSize: 18)),
+                child: const Text('\uD83D\uDC40', style: TextStyle(fontSize: 18)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -182,7 +177,6 @@ class _Viewer3D extends StatelessWidget {
             ],
           ),
         ),
-        // Modello 3D
         Expanded(
           child: Stack(
             children: [
@@ -195,7 +189,6 @@ class _Viewer3D extends StatelessWidget {
                 backgroundColor: const Color(0xFFF0F4FF),
                 shadowIntensity: 1,
               ),
-              // Badge contatore in alto a destra
               Positioned(
                 top: 16, right: 16,
                 child: Container(
@@ -206,12 +199,11 @@ class _Viewer3D extends StatelessWidget {
                     boxShadow: [BoxShadow(color: color.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 3))],
                   ),
                   child: Text(
-                    count == 1 ? '× 1 pezzo' : '× $count pezzi',
+                    count == 1 ? '\u00D7 1 pezzo' : '\u00D7 $count pezzi',
                     style: GoogleFonts.nunito(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
                   ),
                 ),
               ),
-              // Nome pezzo in basso
               Positioned(
                 bottom: 12, left: 0, right: 0,
                 child: Center(
@@ -236,7 +228,6 @@ class _Viewer3D extends StatelessWidget {
   }
 }
 
-// ── SCHERMATA INTRODUTTIVA ───────────────────────────────────────────────────
 class _IntroView extends StatelessWidget {
   final dynamic construction;
   const _IntroView({required this.construction});
@@ -271,7 +262,7 @@ class _IntroView extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('💡', style: TextStyle(fontSize: 18)),
+                  const Text('\uD83D\uDCA1', style: TextStyle(fontSize: 18)),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
@@ -289,7 +280,6 @@ class _IntroView extends StatelessWidget {
   }
 }
 
-// ── SCHERMATA FINALE ─────────────────────────────────────────────────────────
 class _FinaleView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -297,12 +287,12 @@ class _FinaleView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🎉', style: TextStyle(fontSize: 80)),
+          const Text('\uD83C\uDF89', style: TextStyle(fontSize: 80)),
           const SizedBox(height: 16),
           Text('Complimenti!',
             style: GoogleFonts.nunito(fontSize: 32, fontWeight: FontWeight.w900, color: const Color(0xFF20BF6B))),
           const SizedBox(height: 8),
-          Text('Hai costruito tutto!\nSei stato bravissimo 👏',
+          Text('Hai costruito tutto!\nSei stato bravissimo \uD83D\uDC4F',
             textAlign: TextAlign.center,
             style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF636E72), height: 1.5)),
         ],
