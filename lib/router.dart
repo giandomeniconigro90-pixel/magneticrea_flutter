@@ -4,6 +4,7 @@ import 'screens/inventory_screen.dart';
 import 'screens/catalog_screen.dart';
 import 'screens/construction_detail_screen.dart';
 import 'screens/guide_screen.dart';
+import 'screens/settings_screen.dart';
 import 'models/construction.dart';
 
 final appRouter = GoRouter(
@@ -34,6 +35,10 @@ final appRouter = GoRouter(
         final id = state.pathParameters['id']!;
         return GuideScreen(constructionId: id);
       },
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
     ),
   ],
 );

@@ -26,24 +26,40 @@ class HomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20),
+                // ── Header con tasto impostazioni ──────────────────
+                Row(
+                  children: [
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.settings_outlined,
+                          color: Colors.white70),
+                      tooltip: 'Impostazioni',
+                      onPressed: () => context.push('/settings'),
+                    ),
+                  ],
+                ),
                 Text('🧲', style: GoogleFonts.nunito(fontSize: 56)),
                 const SizedBox(height: 12),
                 Text(
                   'MagnetiCrea',
                   style: GoogleFonts.nunito(
-                    fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
                   ),
                 ),
                 Text(
                   'Costruisci mondi con le tue piastrelle magnetiche!',
-                  style: GoogleFonts.nunito(fontSize: 15, color: Colors.white70),
+                  style:
+                      GoogleFonts.nunito(fontSize: 15, color: Colors.white70),
                 ),
                 const SizedBox(height: 40),
                 _MenuCard(
                   icon: '📦',
                   title: 'Il mio inventario',
-                  subtitle: total > 0 ? '$total piastrelle caricate' : 'Inserisci le tue piastrelle',
+                  subtitle: total > 0
+                      ? '$total piastrelle caricate'
+                      : 'Inserisci le tue piastrelle',
                   color: const Color(0xFF20BF6B),
                   onTap: () => context.push('/inventory'),
                 ),
@@ -59,7 +75,8 @@ class HomeScreen extends ConsumerWidget {
                 Center(
                   child: Text(
                     'MagnetiCrea v1.0',
-                    style: GoogleFonts.nunito(color: Colors.white38, fontSize: 12),
+                    style:
+                        GoogleFonts.nunito(color: Colors.white38, fontSize: 12),
                   ),
                 ),
               ],
@@ -95,7 +112,12 @@ class _MenuCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 6))],
+          boxShadow: [
+            BoxShadow(
+                color: color.withOpacity(0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 6))
+          ],
         ),
         child: Row(
           children: [
@@ -105,8 +127,14 @@ class _MenuCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: GoogleFonts.nunito(fontSize: 17, fontWeight: FontWeight.w800, color: const Color(0xFF2D3436))),
-                  Text(subtitle, style: GoogleFonts.nunito(fontSize: 13, color: const Color(0xFF636E72))),
+                  Text(title,
+                      style: GoogleFonts.nunito(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF2D3436))),
+                  Text(subtitle,
+                      style: GoogleFonts.nunito(
+                          fontSize: 13, color: const Color(0xFF636E72))),
                 ],
               ),
             ),
