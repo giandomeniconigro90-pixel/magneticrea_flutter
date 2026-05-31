@@ -5,7 +5,7 @@ import '../models/tile_type.dart';
 /// Aggiungere qui ogni nuovo tile mantenendo i commenti di sezione.
 const List<TileType> kTileTypes = [
 
-  // ── QUADRATI ─────────────────────────────────────────────────────
+  // ── QUADRATI ──────────────────────────────────────────────────────
   TileType(
     id: 'quadrato_grande',
     label: 'Quadrato Grande',
@@ -36,7 +36,7 @@ const List<TileType> kTileTypes = [
     category: TileCategory.structural,
   ),
 
-  // ── TRIANGOLI ────────────────────────────────────────────────────
+  // ── TRIANGOLI ───────────────────────────────────────────────────
   TileType(
     id: 'triangolo_equilatero',
     label: 'Triangolo Equilatero',
@@ -74,7 +74,7 @@ const List<TileType> kTileTypes = [
     category: TileCategory.structural,
   ),
 
-  // ── POLIGONI ─────────────────────────────────────────────────────
+  // ── POLIGONI ───────────────────────────────────────────────────
   TileType(
     id: 'rombo',
     label: 'Rombo',
@@ -103,8 +103,22 @@ const List<TileType> kTileTypes = [
     category: TileCategory.structural,
   ),
 
-  // ── APERTURE (isOpen: true) ───────────────────────────────────────
+  // ── APERTURE (isOpen: true) ────────────────────────────────────
   // Regola: NON usare come base, tetto o parete contenitiva.
+
+  // Quadrato grande con foro quadrato centrale (cornice rossa foto)
+  TileType(
+    id: 'quadrato_grande_aperto',
+    label: 'Quadrato Grande Aperto',
+    short: 'Quadrato Aperto',
+    color: Color(0xFFFF6B6B),
+    bgColor: Color(0xFFFFF0F0),
+    shape: TileShape.squareLargeOpen,
+    category: TileCategory.opening,
+    isOpen: true,
+  ),
+
+  // Porta standard con arco semicircolare
   TileType(
     id: 'porta',
     label: 'Porta',
@@ -115,6 +129,20 @@ const List<TileType> kTileTypes = [
     category: TileCategory.opening,
     isOpen: true,
   ),
+
+  // Porta pentagonale: apertura a forma di casetta (foto rossa con punta)
+  TileType(
+    id: 'porta_pentagono',
+    label: 'Porta Pentagono',
+    short: 'Porta Casetta',
+    color: Color(0xFFFF6B6B),
+    bgColor: Color(0xFFFFF0F0),
+    shape: TileShape.doorPentagon,
+    category: TileCategory.opening,
+    isOpen: true,
+  ),
+
+  // Finestra griglia 2×2
   TileType(
     id: 'finestra',
     label: 'Finestra',
@@ -126,7 +154,7 @@ const List<TileType> kTileTypes = [
     isOpen: true,
   ),
 
-  // ── FUNZIONALI ───────────────────────────────────────────────────
+  // ── FUNZIONALI ──────────────────────────────────────────────────
   TileType(
     id: 'base_macchina',
     label: 'Base Macchina',
@@ -140,8 +168,6 @@ const List<TileType> kTileTypes = [
   // ── CASTLE SPECIAL (isCastleSpecial: true) ───────────────────────
   // Questi pezzi sono esclusivi dei set castle MAGNA-TILES.
   // Il bambino deve avere fisicamente il set castle per usarli.
-
-  // Strutturale castle: quarto di cerchio per archi e torri
   TileType(
     id: 'quarter_circle_castle',
     label: 'Quarto di Cerchio',
@@ -152,8 +178,6 @@ const List<TileType> kTileTypes = [
     category: TileCategory.structural,
     isCastleSpecial: true,
   ),
-
-  // Apertura castle: ponte levatoio — apertura passante funzionale
   TileType(
     id: 'drawbridge',
     label: 'Ponte Levatoio',
@@ -163,10 +187,8 @@ const List<TileType> kTileTypes = [
     shape: TileShape.drawbridge,
     category: TileCategory.opening,
     isCastleSpecial: true,
-    isOpen: true, // apertura passante — non usare come base/tetto/parete contenitiva
+    isOpen: true,
   ),
-
-  // Strutturale castle: scala a spirale per accesso interno/esterno
   TileType(
     id: 'spiral_staircase',
     label: 'Scala a Spirale',
@@ -177,8 +199,6 @@ const List<TileType> kTileTypes = [
     category: TileCategory.structural,
     isCastleSpecial: true,
   ),
-
-  // Strutturale castle: balcone — sporgenza architettonica
   TileType(
     id: 'balcony',
     label: 'Balcone',
@@ -189,8 +209,6 @@ const List<TileType> kTileTypes = [
     category: TileCategory.structural,
     isCastleSpecial: true,
   ),
-
-  // Apertura castle: finestra ridisegnata per castelli
   TileType(
     id: 'window_castle',
     label: 'Finestra Castle',
@@ -200,7 +218,7 @@ const List<TileType> kTileTypes = [
     shape: TileShape.windowCastle,
     category: TileCategory.opening,
     isCastleSpecial: true,
-    isOpen: true, // apertura decorativa — non usare come base/tetto/parete contenitiva
+    isOpen: true,
   ),
 ];
 
