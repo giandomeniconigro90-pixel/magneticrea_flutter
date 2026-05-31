@@ -60,6 +60,7 @@ class _GuideScreenState extends State<GuideScreen>
     final isFirst = stepIndex == 0;
     final isLast  = stepIndex == construction.steps.length - 1;
     if (isFirst || isLast) return null;
+    if (!construction.is3d) return null;
     return 'assets/models/steps/${construction.id}_step${stepIndex + 1}.glb';
   }
 
@@ -198,6 +199,7 @@ class _StepView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // ── Banner azione ──────────────────────────────────────────────
         Container(
           margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -257,6 +259,7 @@ class _StepView extends StatelessWidget {
             ],
           ),
         ),
+        // ── Area visuale ───────────────────────────────────────────────
         Expanded(
           child: glbPath != null
               ? _Viewer3D(glbPath: glbPath!, tileColor: tile?.color)
@@ -267,6 +270,7 @@ class _StepView extends StatelessWidget {
   }
 }
 
+// ── Viewer 3D ────────────────────────────────────────────────────────────────
 class _Viewer3D extends StatelessWidget {
   final String glbPath;
   final Color? tileColor;
@@ -302,7 +306,6 @@ class _Viewer3D extends StatelessWidget {
           shadowIntensity: 0.4,
           shadowSoftness: 1.0,
           exposure: 1.2,
-          // ── Zoom iniziale più lontano ────────────────────────────
           fieldOfView: '25deg',
           cameraOrbit: '45deg 60deg 8m',
           minCameraOrbit: 'auto auto 3m',
@@ -313,6 +316,10 @@ class _Viewer3D extends StatelessWidget {
   }
 }
 
+// ── Schema 2D ─────────────────────────────────────────────────────────────────
+// Usa un canvas QUADRATO centrato pari a min(w, h) con padding del 10%.
+// Tutti i pezzi vengono scalati e posizionati rispetto a questo quadrato,
+// quindi sono sempre visibili indipendentemente dall'aspect ratio dello schermo.
 class _ProgressSchema extends StatelessWidget {
   final BuildStep step;
   final Animation<double> pulseAnim;
@@ -322,9 +329,16 @@ class _ProgressSchema extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
-      final w = constraints.maxWidth;
-      final h = constraints.maxHeight;
-      final baseSize = w * 0.18;
+      final availW = constraints.maxWidth;
+      final availH = constraints.maxHeight;
+
+      // Canvas quadrato centrato
+      final side    = min(availW, availH) * 0.92;
+      final offsetX = (availW - side) / 2;
+      final offsetY = (availH - side) / 2;
+
+      // Dimensione base pezzo: ~16% del lato del canvas
+      final baseSize = side * 0.16;
 
       return Container(
         margin: const EdgeInsets.all(8),
@@ -339,21 +353,20 @@ class _ProgressSchema extends StatelessWidget {
             children: step.placedPieces.map((piece) {
               final tile = tileById(piece.tileId);
               if (tile == null) return const SizedBox.shrink();
+
               final isNew = piece.isNew == true;
-              final size = baseSize *
-                  (tile.shape == TileShape.squareLarge
-                      ? 1.2
-                      : tile.shape == TileShape.hexagon
-                          ? 1.1
-                          : tile.shape == TileShape.triangleIsoscaleLarge
-                              ? 1.15
-                              : tile.shape == TileShape.squareSmall
-                                  ? 0.8
-                                  : tile.shape == TileShape.triangleIsoscaleSmall
-                                      ? 0.7
-                                      : 1.0);
-              final color =
-                  isNew ? tile.color : tile.color.withOpacity(0.35);
+
+              // Fattore di scala per forma
+              final scaleFactor = _shapeScale(tile.shape);
+              final size = baseSize * scaleFactor;
+
+              final color = isNew
+                  ? tile.color
+                  : tile.color.withOpacity(0.38);
+
+              // Posizione: le coordinate (0..1) mappate sul canvas quadrato
+              final cx = offsetX + piece.x * side;
+              final cy = offsetY + piece.y * side;
 
               Widget pieceWidget = CustomPaint(
                 size: Size(size, size),
@@ -370,15 +383,15 @@ class _ProgressSchema extends StatelessWidget {
               if (isNew) {
                 pieceWidget = AnimatedBuilder(
                   animation: pulseAnim,
-                  builder: (_, child) =>
-                      Transform.scale(scale: pulseAnim.value, child: child),
+                  builder: (_, child) => Transform.scale(
+                      scale: pulseAnim.value, child: child),
                   child: pieceWidget,
                 );
               }
 
               return Positioned(
-                left: piece.x * w - size / 2,
-                top: piece.y * h - size / 2,
+                left: cx - size / 2,
+                top:  cy - size / 2,
                 child: pieceWidget,
               );
             }).toList(),
@@ -387,8 +400,36 @@ class _ProgressSchema extends StatelessWidget {
       );
     });
   }
+
+  double _shapeScale(TileShape shape) {
+    switch (shape) {
+      case TileShape.squareLarge:
+        return 1.30;
+      case TileShape.hexagon:
+        return 1.20;
+      case TileShape.triangleIsoscaleLarge:
+        return 1.20;
+      case TileShape.pentagon:
+        return 1.10;
+      case TileShape.squareLargeOpen:
+        return 1.30;
+      case TileShape.squareSmall:
+        return 0.85;
+      case TileShape.triangleIsoscaleSmall:
+        return 0.75;
+      case TileShape.rhombus:
+        return 1.00;
+      case TileShape.triangleEquilateral:
+        return 1.00;
+      case TileShape.triangleRight:
+        return 1.00;
+      default:
+        return 1.00;
+    }
+  }
 }
 
+// ── Intro ─────────────────────────────────────────────────────────────────────
 class _IntroView extends StatelessWidget {
   final dynamic construction;
   const _IntroView({required this.construction});
@@ -453,6 +494,7 @@ class _IntroView extends StatelessWidget {
   }
 }
 
+// ── Finale ────────────────────────────────────────────────────────────────────
 class _FinaleView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
