@@ -5,6 +5,13 @@ final List<Construction> kConstructions = [
 
   // ─── FACILI ───────────────────────────────────────────────────────────────
 
+  // ── CASA (sistema GRIGLIA) ────────────────────────────────────────────────
+  // Geometria:
+  //   Quadrato grande   : centro gx=0.5, gy=0.5  (occupa da 0 a 1 in Y)
+  //   Triangolo sx      : base appoggiata sul bordo superiore del quadrato (gy=0)
+  //                       centro a gy = -(√3/2)/2 ≈ -0.433, gx = 0.25
+  //   Triangolo dx      : speculare, gx = 0.75, gy = -0.433
+  //   rotation=180 → triangolo capovolto (punta verso l'alto) = tetto
   Construction(
     id: 'casa',
     name: 'Casa',
@@ -18,25 +25,81 @@ final List<Construction> kConstructions = [
     tip: 'Il tetto viene bene con i triangoli isosceli grandi.',
     piecesNeeded: {'quadrato_grande': 1, 'triangolo_isoscele_grande': 2},
     steps: [
-      BuildStep(stepNumber: 1, tileId: null, action: 'Prendi tutti i pezzi e mettili davanti a te', placedPieces: []),
-      BuildStep(stepNumber: 2, tileId: 'quadrato_grande', action: 'Metti il quadrato rosso sul tavolo: è il muro della casa',
-        placedPieces: [PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.65, isNew: true)]),
-      BuildStep(stepNumber: 3, tileId: 'triangolo_isoscele_grande', action: 'Appoggia un triangolo blu sopra a sinistra del quadrato',
+      BuildStep(
+        stepNumber: 1,
+        tileId: null,
+        action: 'Prendi tutti i pezzi e mettili davanti a te',
+        placedPieces: [],
+      ),
+      BuildStep(
+        stepNumber: 2,
+        tileId: 'quadrato_grande',
+        action: 'Metti il quadrato rosso sul tavolo: è il muro della casa',
         placedPieces: [
-          PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.65),
-          PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.35, y: 0.30, isNew: true),
-        ]),
-      BuildStep(stepNumber: 4, tileId: 'triangolo_isoscele_grande', action: 'Appoggia l\'altro triangolo blu a destra: il tetto è completo!',
+          PlacedPiece(
+            tileId: 'quadrato_grande',
+            gx: 0.5,
+            gy: 0.5,
+            isNew: true,
+          ),
+        ],
+      ),
+      BuildStep(
+        stepNumber: 3,
+        tileId: 'triangolo_isoscele_grande',
+        action: 'Appoggia un triangolo blu sopra a sinistra: metà del tetto!',
         placedPieces: [
-          PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.65),
-          PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.35, y: 0.30),
-          PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.65, y: 0.30, isNew: true),
-        ]),
-      BuildStep(stepNumber: 5, tileId: null, action: 'Bravissimo! 🏠 La tua casa è pronta!', placedPieces: [
-          PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.65),
-          PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.35, y: 0.30),
-          PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.65, y: 0.30),
-        ]),
+          PlacedPiece(tileId: 'quadrato_grande', gx: 0.5, gy: 0.5),
+          PlacedPiece(
+            tileId: 'triangolo_isoscele_grande',
+            gx: 0.25,
+            gy: -0.433,
+            rotation: 180,
+            isNew: true,
+          ),
+        ],
+      ),
+      BuildStep(
+        stepNumber: 4,
+        tileId: 'triangolo_isoscele_grande',
+        action: 'Attacca l\'altro triangolo blu a destra: il tetto è completo!',
+        placedPieces: [
+          PlacedPiece(tileId: 'quadrato_grande', gx: 0.5, gy: 0.5),
+          PlacedPiece(
+            tileId: 'triangolo_isoscele_grande',
+            gx: 0.25,
+            gy: -0.433,
+            rotation: 180,
+          ),
+          PlacedPiece(
+            tileId: 'triangolo_isoscele_grande',
+            gx: 0.75,
+            gy: -0.433,
+            rotation: 180,
+            isNew: true,
+          ),
+        ],
+      ),
+      BuildStep(
+        stepNumber: 5,
+        tileId: null,
+        action: 'Bravissimo! 🏠 La tua casa è pronta!',
+        placedPieces: [
+          PlacedPiece(tileId: 'quadrato_grande', gx: 0.5, gy: 0.5),
+          PlacedPiece(
+            tileId: 'triangolo_isoscele_grande',
+            gx: 0.25,
+            gy: -0.433,
+            rotation: 180,
+          ),
+          PlacedPiece(
+            tileId: 'triangolo_isoscele_grande',
+            gx: 0.75,
+            gy: -0.433,
+            rotation: 180,
+          ),
+        ],
+      ),
     ],
   ),
 
@@ -391,14 +454,6 @@ final List<Construction> kConstructions = [
     ],
   ),
 
-  // ─── TORRE 3D: 18 step, 1 pannello per volta ──────────────────────────────
-  // step1 = intro (GLB vuoto)
-  // step2-5   = piano 1: N, S, E, W
-  // step6-9   = piano 2: N, S, E, W
-  // step10-13 = piano 3: N, S, E, W
-  // step14-17 = tetto: N, S, E, W
-  // step18 = finale (GLB vuoto)
-
   Construction(
     id: 'torre',
     name: 'Torre',
@@ -412,23 +467,18 @@ final List<Construction> kConstructions = [
     tip: 'Impila i pannelli uno per volta: prima N, poi S, poi E, poi W!',
     piecesNeeded: {'quadrato_grande': 12, 'triangolo_isoscele_grande': 4},
     steps: [
-      // ── Step 1: intro ──────────────────────────────────────────────────────
       BuildStep(stepNumber: 1, tileId: null,
         action: 'Prendi 12 quadrati rossi e 4 triangoli blu: costruiamo la torre!',
         placedPieces: []),
-
-      // ── Piano 1 ────────────────────────────────────────────────────────────
       BuildStep(stepNumber: 2, tileId: 'quadrato_grande',
         action: 'Piano 1 — Metti il pannello NORD (davanti a te) 🔴',
         placedPieces: [PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.2, isNew: true)]),
-
       BuildStep(stepNumber: 3, tileId: 'quadrato_grande',
         action: 'Piano 1 — Attacca il pannello SUD (dietro) 🔴',
         placedPieces: [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.2),
           PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.8, isNew: true),
         ]),
-
       BuildStep(stepNumber: 4, tileId: 'quadrato_grande',
         action: 'Piano 1 — Chiudi il lato EST (destra) 🔴',
         placedPieces: [
@@ -436,7 +486,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.8),
           PlacedPiece(tileId: 'quadrato_grande', x: 0.8, y: 0.5, isNew: true),
         ]),
-
       BuildStep(stepNumber: 5, tileId: 'quadrato_grande',
         action: 'Piano 1 — Chiudi il lato OVEST (sinistra): primo piano completo! 🎉',
         placedPieces: [
@@ -445,8 +494,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.8, y: 0.5),
           PlacedPiece(tileId: 'quadrato_grande', x: 0.2, y: 0.5, isNew: true),
         ]),
-
-      // ── Piano 2 ────────────────────────────────────────────────────────────
       BuildStep(stepNumber: 6, tileId: 'quadrato_grande',
         action: 'Piano 2 — Metti il pannello NORD sul secondo piano 🔴',
         placedPieces: [
@@ -456,7 +503,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.2, y: 0.5),
           PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.15, isNew: true),
         ]),
-
       BuildStep(stepNumber: 7, tileId: 'quadrato_grande',
         action: 'Piano 2 — Pannello SUD 🔴',
         placedPieces: [
@@ -467,7 +513,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.15),
           PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.85, isNew: true),
         ]),
-
       BuildStep(stepNumber: 8, tileId: 'quadrato_grande',
         action: 'Piano 2 — Pannello EST 🔴',
         placedPieces: [
@@ -479,7 +524,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.85),
           PlacedPiece(tileId: 'quadrato_grande', x: 0.85, y: 0.5, isNew: true),
         ]),
-
       BuildStep(stepNumber: 9, tileId: 'quadrato_grande',
         action: 'Piano 2 — Pannello OVEST: secondo piano completo! 🎉',
         placedPieces: [
@@ -492,8 +536,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.85, y: 0.5),
           PlacedPiece(tileId: 'quadrato_grande', x: 0.15, y: 0.5, isNew: true),
         ]),
-
-      // ── Piano 3 ────────────────────────────────────────────────────────────
       BuildStep(stepNumber: 10, tileId: 'quadrato_grande',
         action: 'Piano 3 — Pannello NORD: siamo quasi in cima! 🔴',
         placedPieces: [
@@ -507,7 +549,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.15, y: 0.5),
           PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.1, isNew: true),
         ]),
-
       BuildStep(stepNumber: 11, tileId: 'quadrato_grande',
         action: 'Piano 3 — Pannello SUD 🔴',
         placedPieces: [
@@ -522,7 +563,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.1),
           PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.9, isNew: true),
         ]),
-
       BuildStep(stepNumber: 12, tileId: 'quadrato_grande',
         action: 'Piano 3 — Pannello EST 🔴',
         placedPieces: [
@@ -538,7 +578,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.5, y: 0.9),
           PlacedPiece(tileId: 'quadrato_grande', x: 0.9, y: 0.5, isNew: true),
         ]),
-
       BuildStep(stepNumber: 13, tileId: 'quadrato_grande',
         action: 'Piano 3 — Pannello OVEST: tutti i muri sono su! 🎉',
         placedPieces: [
@@ -555,8 +594,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.9, y: 0.5),
           PlacedPiece(tileId: 'quadrato_grande', x: 0.1, y: 0.5, isNew: true),
         ]),
-
-      // ── Tetto (4 pannelli triangolari) ─────────────────────────────────────
       BuildStep(stepNumber: 14, tileId: 'triangolo_isoscele_grande',
         action: 'Tetto — Triangolo NORD: la punta inizia! 🔵',
         placedPieces: [
@@ -574,7 +611,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'quadrato_grande', x: 0.1, y: 0.5),
           PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.5, y: 0.05, isNew: true),
         ]),
-
       BuildStep(stepNumber: 15, tileId: 'triangolo_isoscele_grande',
         action: 'Tetto — Triangolo SUD 🔵',
         placedPieces: [
@@ -593,7 +629,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.5, y: 0.05),
           PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.5, y: 0.95, isNew: true),
         ]),
-
       BuildStep(stepNumber: 16, tileId: 'triangolo_isoscele_grande',
         action: 'Tetto — Triangolo EST 🔵',
         placedPieces: [
@@ -613,7 +648,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.5, y: 0.95),
           PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.95, y: 0.5, rotation: 90, isNew: true),
         ]),
-
       BuildStep(stepNumber: 17, tileId: 'triangolo_isoscele_grande',
         action: 'Tetto — Triangolo OVEST: la torre è chiusa! 🔵🎉',
         placedPieces: [
@@ -634,8 +668,6 @@ final List<Construction> kConstructions = [
           PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.95, y: 0.5, rotation: 90),
           PlacedPiece(tileId: 'triangolo_isoscele_grande', x: 0.05, y: 0.5, rotation: -90, isNew: true),
         ]),
-
-      // ── Step 18: finale ────────────────────────────────────────────────────
       BuildStep(stepNumber: 18, tileId: null,
         action: '🏰 Bravissimo! La torre è maestosa! Sei un vero costruttore!',
         placedPieces: []),
