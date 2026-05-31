@@ -143,20 +143,20 @@ class TilePainter extends CustomPainter {
           ..close();
         return Path.combine(PathOperation.difference, dpOuter, dpInner);
 
-      // Finestra: cornice quadrata con 4 fori rettangolari arrotondati (griglia 2×2)
-      // Fedele alla foto blu: cornice spessa, 4 riquadri con angoli arrotondati,
-      // separati da barre orizzontale e verticale centrali.
+      // Finestra: cornice quadrata con 4 fori quasi-quadrati ad angoli arrotondati
+      // Valori calibrati sulla foto fisica:
+      //   bord=0.09  cornice sottile
+      //   bar =0.03  barra centrale sottile
+      //   r   =0.08  angoli fori ben arrotondati come nella foto
       case TileShape.window:
         final winOuter = Path()
           ..addRRect(RRect.fromRectAndRadius(
             Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9),
-            Radius.circular(w * 0.06),
+            Radius.circular(w * 0.10),
           ));
-        // Spessore cornice e barre
-        const bord = 0.12; // bordo esterno
-        const bar  = 0.05; // metà spessore barra centrale
-        const r    = 0.04; // raggio angoli fori interni
-        // 4 fori: top-left, top-right, bottom-left, bottom-right
+        const bord = 0.09; // bordo esterno
+        const bar  = 0.03; // metà spessore barra centrale
+        const r    = 0.08; // raggio angoli fori (ben arrotondati)
         final holes = [
           Rect.fromLTWH(w*(bord),      h*(bord),      w*(0.5-bord-bar), h*(0.5-bord-bar)),
           Rect.fromLTWH(w*(0.5+bar),   h*(bord),      w*(0.5-bord-bar), h*(0.5-bord-bar)),
