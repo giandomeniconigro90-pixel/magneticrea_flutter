@@ -1,15 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/tile_types.dart';
 import '../providers/inventory_provider.dart';
 import '../widgets/tile_painter.dart';
 
-class InventoryScreen extends ConsumerWidget {
+class InventoryScreen extends ConsumerStatefulWidget {
   const InventoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InventoryScreen> createState() => _InventoryScreenState();
+}
+
+class _InventoryScreenState extends ConsumerState<InventoryScreen> {
+  final Map<String, TextEditingController> _controllers = {};
+
+  @override
+  void dispose() {
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  TextEditingController _controllerFor(String id, int qty) {
+    if (!_controllers.containsKey(id)) {
+      _controllers[id] = TextEditingController(text: '$qty');
+    }
+    return _controllers[id]!;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final inventory = ref.watch(inventoryProvider);
     final notifier = ref.read(inventoryProvider.notifier);
     final total = notifier.total;
@@ -37,6 +60,14 @@ class InventoryScreen extends ConsumerWidget {
         itemBuilder: (context, i) {
           final tile = kTileTypes[i];
           final qty = inventory[tile.id] ?? 0;
+          final controller = _controllerFor(tile.id, qty);
+
+          // Aggiorna il controller solo se il valore esterno cambia
+          // (evita loop durante la digitazione)
+          if (controller.text != '$qty' && !controller.selection.isValid) {
+            controller.text = '$qty';
+          }
+
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
@@ -68,26 +99,61 @@ class InventoryScreen extends ConsumerWidget {
                       icon: Icons.remove,
                       enabled: qty > 0,
                       color: const Color(0xFFDFE6E9),
-                      onTap: () => notifier.decrement(tile.id),
+                      onTap: () {
+                        notifier.decrement(tile.id);
+                        controller.text = '${(qty - 1).clamp(0, 9999)}';
+                      },
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     SizedBox(
-                      width: 40,
-                      child: Text(
-                        '$qty',
+                      width: 52,
+                      child: TextField(
+                        controller: controller,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         textAlign: TextAlign.center,
                         style: GoogleFonts.nunito(
-                          fontSize: 18, fontWeight: FontWeight.w900,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
                           color: qty > 0 ? tile.color : const Color(0xFFB2BEC3),
+                        ),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: tile.color.withOpacity(0.4)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: tile.color, width: 2),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          ),
+                        ),
+                        onChanged: (val) {
+                          final parsed = int.tryParse(val);
+                          if (parsed != null && parsed >= 0) {
+                            notifier.setQuantity(tile.id, parsed);
+                          }
+                        },
+                        onTap: () => controller.selection = TextSelection(
+                          baseOffset: 0,
+                          extentOffset: controller.text.length,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     _CircleBtn(
                       icon: Icons.add,
                       enabled: true,
                       color: tile.color,
-                      onTap: () => notifier.increment(tile.id),
+                      onTap: () {
+                        notifier.increment(tile.id);
+                        controller.text = '${qty + 1}';
+                      },
                     ),
                   ],
                 ),
