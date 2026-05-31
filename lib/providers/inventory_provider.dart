@@ -18,9 +18,11 @@ class InventoryNotifier extends StateNotifier<Map<String, int>> {
 
   Future<void> set(String tileId, int qty) async {
     final prefs = await SharedPreferences.getInstance();
-    state = {...state, tileId: qty.clamp(0, 99)};
+    state = {...state, tileId: qty.clamp(0, 9999)};
     await prefs.setInt('inv_$tileId', state[tileId]!);
   }
+
+  Future<void> setQuantity(String tileId, int qty) => set(tileId, qty);
 
   Future<void> increment(String tileId) async => set(tileId, (state[tileId] ?? 0) + 1);
   Future<void> decrement(String tileId) async => set(tileId, (state[tileId] ?? 0) - 1);
