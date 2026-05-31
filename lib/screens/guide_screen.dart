@@ -56,15 +56,27 @@ class _GuideScreenState extends State<GuideScreen>
     _fadeCtrl.forward();
   }
 
+  /// Restituisce il path del GLB per il passo corrente.
+  /// Step 0 (intro) e ultimo step (finale) non hanno GLB di assemblaggio
+  /// quindi mostrano la view speciale.
+  String? _glbPath(int stepIndex) {
+    final isFirst = stepIndex == 0;
+    final isLast  = stepIndex == construction.steps.length - 1;
+    if (isFirst || isLast) return null;
+    // step_idx parte da 1 nel nome file (step1 = primo passo reale)
+    return 'assets/models/steps/${construction.id}_step${stepIndex + 1}.glb';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final steps = construction.steps;
-    final step = steps[_currentStep];
-    final isLast = _currentStep == steps.length - 1;
-    final isFirst = _currentStep == 0;
-    final tile = step.tileId != null ? tileById(step.tileId!) : null;
+    final steps    = construction.steps;
+    final step     = steps[_currentStep];
+    final isLast   = _currentStep == steps.length - 1;
+    final isFirst  = _currentStep == 0;
+    final tile     = step.tileId != null ? tileById(step.tileId!) : null;
     final progress = (_currentStep + 1) / steps.length;
     final newCount = step.placedPieces.where((p) => p.isNew == true).length;
+    final glbPath  = _glbPath(_currentStep);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4FF),
@@ -98,6 +110,7 @@ class _GuideScreenState extends State<GuideScreen>
                           newCount: newCount,
                           pulseAnim: _pulseAnim,
                           constructionId: widget.constructionId,
+                          glbPath: glbPath,
                         ),
             ),
           ),
@@ -167,12 +180,16 @@ class _GuideScreenState extends State<GuideScreen>
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP VIEW — mostra il modello 3D del passo corrente
+// ─────────────────────────────────────────────────────────────────────────────
 class _StepView extends StatelessWidget {
   final BuildStep step;
   final TileType? tile;
   final int newCount;
   final Animation<double> pulseAnim;
   final String constructionId;
+  final String? glbPath;
 
   const _StepView({
     super.key,
@@ -181,12 +198,14 @@ class _StepView extends StatelessWidget {
     required this.newCount,
     required this.pulseAnim,
     required this.constructionId,
+    required this.glbPath,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // ── Banner istruzione ────────────────────────────────────────
         Container(
           margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -208,8 +227,8 @@ class _StepView extends StatelessWidget {
                 Container(
                   width: 36,
                   height: 36,
-                  decoration:
-                      BoxDecoration(color: tile!.color, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                      color: tile!.color, shape: BoxShape.circle),
                   child: CustomPaint(
                     painter:
                         TilePainter(shape: tile!.shape, color: Colors.white),
@@ -246,67 +265,66 @@ class _StepView extends StatelessWidget {
             ],
           ),
         ),
+
+        // ── Viewer 3D principale (occupa tutto lo spazio rimasto) ────
         Expanded(
-          child: Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: _ProgressSchema(
-                  step: step,
-                  pulseAnim: pulseAnim,
-                ),
-              ),
-              if (tile != null)
-                Container(
-                  width: 140,
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border:
-                        Border.all(color: tile!.color.withOpacity(0.4), width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                          color: tile!.color.withOpacity(0.15),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3))
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          tile!.short,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.nunito(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: tile!.color),
-                        ),
-                      ),
-                      Expanded(
-                        child: ModelViewer(
-                          src: 'assets/models/${tile!.id}.glb',
-                          autoRotate: true,
-                          autoRotateDelay: 0,
-                          rotationPerSecond: '40deg',
-                          cameraControls: false,
-                          backgroundColor: Colors.white,
-                          shadowIntensity: 0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
+          child: glbPath != null
+              ? _Viewer3D(glbPath: glbPath!, tileColor: tile?.color)
+              : _ProgressSchema(step: step, pulseAnim: pulseAnim),
         ),
       ],
     );
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// VIEWER 3D — carica il GLB del passo corrente a tutto schermo
+// ─────────────────────────────────────────────────────────────────────────────
+class _Viewer3D extends StatelessWidget {
+  final String glbPath;
+  final Color? tileColor;
+
+  const _Viewer3D({required this.glbPath, this.tileColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: tileColor?.withOpacity(0.35) ?? const Color(0xFFDFE6E9),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (tileColor ?? Colors.blue).withOpacity(0.10),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: ModelViewer(
+          src: glbPath,
+          autoRotate: false,
+          cameraControls: true,         // il bambino può ruotare con le dita!
+          backgroundColor: Colors.white,
+          shadowIntensity: 0.4,
+          shadowSoftness: 1.0,
+          exposure: 1.2,
+          fieldOfView: '45deg',
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FALLBACK SCHEMA 2D (usato se il GLB non è disponibile)
+// ─────────────────────────────────────────────────────────────────────────────
 class _ProgressSchema extends StatelessWidget {
   final BuildStep step;
   final Animation<double> pulseAnim;
@@ -346,7 +364,8 @@ class _ProgressSchema extends StatelessWidget {
                                   : tile.shape == TileShape.triangleIsoscaleSmall
                                       ? 0.7
                                       : 1.0);
-              final color = isNew ? tile.color : tile.color.withOpacity(0.35);
+              final color =
+                  isNew ? tile.color : tile.color.withOpacity(0.35);
 
               Widget pieceWidget = CustomPaint(
                 size: Size(size, size),
@@ -382,6 +401,9 @@ class _ProgressSchema extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// INTRO VIEW
+// ─────────────────────────────────────────────────────────────────────────────
 class _IntroView extends StatelessWidget {
   final dynamic construction;
   const _IntroView({required this.construction});
@@ -394,7 +416,8 @@ class _IntroView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(construction.emoji, style: const TextStyle(fontSize: 80)),
+            Text(construction.emoji,
+                style: const TextStyle(fontSize: 80)),
             const SizedBox(height: 20),
             Text(
               construction.name,
@@ -408,7 +431,9 @@ class _IntroView extends StatelessWidget {
               construction.description,
               textAlign: TextAlign.center,
               style: GoogleFonts.nunito(
-                  fontSize: 15, color: const Color(0xFF636E72), height: 1.5),
+                  fontSize: 15,
+                  color: const Color(0xFF636E72),
+                  height: 1.5),
             ),
             const SizedBox(height: 20),
             Container(
@@ -421,7 +446,8 @@ class _IntroView extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('\uD83D\uDCA1', style: TextStyle(fontSize: 18)),
+                  const Text('\uD83D\uDCA1',
+                      style: TextStyle(fontSize: 18)),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
@@ -442,6 +468,9 @@ class _IntroView extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FINALE VIEW
+// ─────────────────────────────────────────────────────────────────────────────
 class _FinaleView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -449,7 +478,8 @@ class _FinaleView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('\uD83C\uDF89', style: TextStyle(fontSize: 80)),
+          const Text('\uD83C\uDF89',
+              style: TextStyle(fontSize: 80)),
           const SizedBox(height: 16),
           Text('Complimenti!',
               style: GoogleFonts.nunito(
