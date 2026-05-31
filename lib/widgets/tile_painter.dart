@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import '../models/tile_type.dart';
 
 /// Disegna il profilo 2D di una piastrella magnetica su un Canvas Flutter.
-/// Ogni case dello switch copre esattamente un TileShape —
-/// se si aggiunge un nuovo TileShape in tile_type.dart, il compilatore
-/// segnalerà subito l'errore qui, impedendo build silenziosi.
 class TilePainter extends CustomPainter {
   final TileShape shape;
   final Color color;
@@ -28,8 +25,6 @@ class TilePainter extends CustomPainter {
     canvas.drawPath(path, stroke);
   }
 
-  /// Costruisce il Path 2D per ogni shape.
-  /// Le coordinate sono normalizzate su w/h (0.0 – 1.0).
   Path _buildPath(TileShape shape, Size s) {
     final w = s.width;
     final h = s.height;
@@ -42,7 +37,6 @@ class TilePainter extends CustomPainter {
         return Path()
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
 
-      // Quadrato grande con foro quadrato centrale (cornice rossa)
       case TileShape.squareLargeOpen:
         final outer = Path()
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
@@ -113,8 +107,6 @@ class TilePainter extends CustomPainter {
           ..close();
 
       // ── APERTURE STANDARD ───────────────────────────────────────────
-
-      // Porta: rettangolo con semicerchio in cima
       case TileShape.door:
         final doorPath = Path();
         final archCy = h * 0.45;
@@ -130,7 +122,6 @@ class TilePainter extends CustomPainter {
           ..close();
         return doorPath;
 
-      // Porta pentagonale: cornice con foro a forma di casetta
       case TileShape.doorPentagon:
         final dpOuter = Path()
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
@@ -143,25 +134,26 @@ class TilePainter extends CustomPainter {
           ..close();
         return Path.combine(PathOperation.difference, dpOuter, dpInner);
 
-      // Finestra: cornice quadrata con 4 fori quasi-quadrati ad angoli arrotondati
-      // Valori calibrati sulla foto fisica:
-      //   bord=0.09  cornice sottile
-      //   bar =0.03  barra centrale sottile
-      //   r   =0.08  angoli fori ben arrotondati come nella foto
+      // Finestra: cornice spessa + croce centrale spessa + 4 fori arrotondati
+      // Calibrazione sulla foto fisica:
+      //   bord = 0.15  cornice esterna spessa
+      //   bar  = 0.06  metà barra centrale spessa
+      //   r    = 0.09  angoli fori molto arrotondati
+      //   rExt = 0.12  angoli esterni arrotondati
       case TileShape.window:
+        const bord = 0.15;
+        const bar  = 0.06;
+        const r    = 0.09;
         final winOuter = Path()
           ..addRRect(RRect.fromRectAndRadius(
-            Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9),
-            Radius.circular(w * 0.10),
+            Rect.fromLTWH(w * 0.04, h * 0.04, w * 0.92, h * 0.92),
+            Radius.circular(w * 0.12),
           ));
-        const bord = 0.09; // bordo esterno
-        const bar  = 0.03; // metà spessore barra centrale
-        const r    = 0.08; // raggio angoli fori (ben arrotondati)
         final holes = [
-          Rect.fromLTWH(w*(bord),      h*(bord),      w*(0.5-bord-bar), h*(0.5-bord-bar)),
-          Rect.fromLTWH(w*(0.5+bar),   h*(bord),      w*(0.5-bord-bar), h*(0.5-bord-bar)),
-          Rect.fromLTWH(w*(bord),      h*(0.5+bar),   w*(0.5-bord-bar), h*(0.5-bord-bar)),
-          Rect.fromLTWH(w*(0.5+bar),   h*(0.5+bar),   w*(0.5-bord-bar), h*(0.5-bord-bar)),
+          Rect.fromLTWH(w * bord,        h * bord,        w * (0.5 - bord - bar), h * (0.5 - bord - bar)),
+          Rect.fromLTWH(w * (0.5 + bar), h * bord,        w * (0.5 - bord - bar), h * (0.5 - bord - bar)),
+          Rect.fromLTWH(w * bord,        h * (0.5 + bar), w * (0.5 - bord - bar), h * (0.5 - bord - bar)),
+          Rect.fromLTWH(w * (0.5 + bar), h * (0.5 + bar), w * (0.5 - bord - bar), h * (0.5 - bord - bar)),
         ];
         Path result = winOuter;
         for (final rect in holes) {
