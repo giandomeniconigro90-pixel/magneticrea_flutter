@@ -109,7 +109,7 @@ const List<TileType> kTileTypes = [
     color: Color(0xFFE84393),
     bgColor: Color(0xFFFFE5F3),
     shape: TileShape.door,
-    isOpen: true,   // ha arco passante — non usare come base/tetto/parete contenitiva
+    isOpen: true,
   ),
   TileType(
     id: 'finestra',
@@ -118,7 +118,7 @@ const List<TileType> kTileTypes = [
     color: Color(0xFFE84393),
     bgColor: Color(0xFFFFE5F3),
     shape: TileShape.window,
-    isOpen: true,   // ha griglia passante — non usare come base/tetto/parete contenitiva
+    isOpen: true,
   ),
 
   // ── PEZZI SPECIALI ────────────────────────────────────────────────
@@ -129,7 +129,103 @@ const List<TileType> kTileTypes = [
     color: Color(0xFF45AAF2),
     bgColor: Color(0xFFE3F4FF),
     shape: TileShape.carBase,
-    isOpen: false,  // base solida con ruote
+    isOpen: false,
+  ),
+
+  // ── CASTLE STANDARD ───────────────────────────────────────────────
+  TileType(
+    id: 'quarter_circle_castle',
+    label: 'Quarto di Cerchio Castle',
+    short: 'Quarto Cerchio',
+    color: Color(0xFFD980FA),
+    bgColor: Color(0xFFFAE5FF),
+    shape: TileShape.quarterCircle,
+    category: TileCategory.castleStandard,
+    isOpen: false,
+  ),
+  TileType(
+    id: 'glitter_square',
+    label: 'Quadrato Glitter',
+    short: 'Quadrato Glitter',
+    color: Color(0xFFFFD700),
+    bgColor: Color(0xFFFFFBE6),
+    shape: TileShape.glitterSquare,
+    category: TileCategory.castleStandard,
+    isOpen: false,
+  ),
+  TileType(
+    id: 'glitter_triangle',
+    label: 'Triangolo Glitter',
+    short: 'Triangolo Glitter',
+    color: Color(0xFFFFD700),
+    bgColor: Color(0xFFFFFBE6),
+    shape: TileShape.glitterTriangle,
+    category: TileCategory.castleStandard,
+    isOpen: false,
+  ),
+
+  // ── CASTLE SPECIAL ────────────────────────────────────────────────
+  TileType(
+    id: 'drawbridge',
+    label: 'Ponte Levatoio',
+    short: 'Drawbridge',
+    color: Color(0xFF8B572A),
+    bgColor: Color(0xFFF5EDE3),
+    shape: TileShape.drawbridge,
+    category: TileCategory.castleSpecial,
+    isOpen: true,   // apertura passante — non usare come base/tetto/parete contenitiva
+  ),
+  TileType(
+    id: 'spiral_staircase',
+    label: 'Scala a Spirale',
+    short: 'Scala Spirale',
+    color: Color(0xFFE8A0BF),
+    bgColor: Color(0xFFFFF0F7),
+    shape: TileShape.spiralStaircase,
+    category: TileCategory.castleSpecial,
+    isOpen: false,
+  ),
+  TileType(
+    id: 'balcony',
+    label: 'Balcone',
+    short: 'Balcone',
+    color: Color(0xFFB8860B),
+    bgColor: Color(0xFFFFF8E1),
+    shape: TileShape.balcony,
+    category: TileCategory.castleSpecial,
+    isOpen: false,
+  ),
+  TileType(
+    id: 'window_castle',
+    label: 'Finestra Castle',
+    short: 'Finestra Castle',
+    color: Color(0xFF9B59B6),
+    bgColor: Color(0xFFF5E6FF),
+    shape: TileShape.windowCastle,
+    category: TileCategory.castleSpecial,
+    isOpen: true,   // apertura decorativa — non usare come base/tetto/parete contenitiva
+  ),
+
+  // ── MICRO ─────────────────────────────────────────────────────────
+  TileType(
+    id: 'micro_square',
+    label: 'Micro Quadrato',
+    short: 'microMAGS Q',
+    color: Color(0xFFFF6B6B),
+    bgColor: Color(0xFFFFF0F0),
+    shape: TileShape.microSquare,
+    category: TileCategory.micro,
+    isOpen: false,
+  ),
+  TileType(
+    id: 'micro_triangle',
+    label: 'Micro Triangolo',
+    short: 'microMAGS T',
+    color: Color(0xFF45AAF2),
+    bgColor: Color(0xFFE3F4FF),
+    shape: TileShape.microTriangle,
+    category: TileCategory.micro,
+    isOpen: false,
   ),
 ];
 
@@ -140,3 +236,7 @@ TileType? tileById(String id) {
     return null;
   }
 }
+
+/// Ritorna solo i tile di una categoria specifica
+List<TileType> tilesByCategory(TileCategory category) =>
+    kTileTypes.where((t) => t.category == category).toList();

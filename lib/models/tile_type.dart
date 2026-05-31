@@ -7,6 +7,7 @@ class TileType {
   final Color color;
   final Color bgColor;
   final TileShape shape;
+  final TileCategory category;
   /// true = la piastrella ha aperture passanti (es. porta, finestra).
   /// Non usare come base, pavimento, tetto o parete contenitiva.
   final bool isOpen;
@@ -18,11 +19,13 @@ class TileType {
     required this.color,
     required this.bgColor,
     required this.shape,
+    this.category = TileCategory.standard,
     this.isOpen = false,
   });
 }
 
 enum TileShape {
+  // ── standard ──────────────────────────────────────────
   squareLarge,
   squareSmall,
   rectangle,
@@ -36,4 +39,23 @@ enum TileShape {
   door,
   window,
   carBase,
+  // ── castle standard ───────────────────────────────────
+  quarterCircle,
+  glitterSquare,
+  glitterTriangle,
+  // ── castle special ────────────────────────────────────
+  drawbridge,
+  spiralStaircase,
+  balcony,
+  windowCastle,
+  // ── micro ─────────────────────────────────────────────
+  microSquare,
+  microTriangle,
+}
+
+enum TileCategory {
+  standard,
+  castleStandard,
+  castleSpecial,
+  micro,
 }
