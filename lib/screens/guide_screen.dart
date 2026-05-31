@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:model_viewer_plus/model_viewer_plus.dart';
 import '../data/constructions.dart';
 import '../data/tile_types.dart';
 import '../models/build_step.dart';
@@ -45,8 +46,10 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
     final steps = construction.steps;
     final step = steps[_currentStep];
     final isLast = _currentStep == steps.length - 1;
+    final isFirst = _currentStep == 0;
     final tile = step.tileId != null ? tileById(step.tileId!) : null;
     final progress = (_currentStep + 1) / steps.length;
+    final newCount = step.placedPieces.where((p) => p.isNew && p.tileId == step.tileId).length;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4FF),
@@ -65,30 +68,38 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
       ),
       body: Column(
         children: [
-          // Schema progressivo animato
+          // ── ZONA PRINCIPALE ──────────────────────────────────────
           Expanded(
-            flex: 5,
             child: FadeTransition(
               opacity: _fadeAnim,
-              child: _SchemaCanvas(step: step),
+              child: isLast
+                  ? _FinaleView()
+                  : isFirst
+                      ? _IntroView(construction: construction)
+                      : tile != null
+                          ? _Viewer3D(tileId: tile.id, color: tile.color, count: newCount > 0 ? newCount : 1, label: tile.label, action: step.action)
+                          : _IntroView(construction: construction),
             ),
           ),
-          // Card azione
-          FadeTransition(
-            opacity: _fadeAnim,
-            child: _ActionCard(
-              step: step,
-              tile: tile,
-              stepNum: _currentStep + 1,
-              total: steps.length,
-              isLast: isLast,
-            ),
-          ),
-          // Bottoni navigazione
+          // ── NAVIGAZIONE ──────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
             child: Row(
               children: [
+                // Indicatore passo
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFDFE6E9)),
+                  ),
+                  child: Text(
+                    '${_currentStep + 1} / ${steps.length}',
+                    style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 14, color: const Color(0xFF636E72)),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 if (_currentStep > 0)
                   Expanded(
                     child: OutlinedButton(
@@ -125,212 +136,177 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
   }
 }
 
-class _SchemaCanvas extends StatelessWidget {
-  final BuildStep step;
-  const _SchemaCanvas({required this.step});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12)],
-      ),
-      child: step.placedPieces.isEmpty
-          ? Center(child: Text('👋', style: const TextStyle(fontSize: 60)))
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                return Stack(
-                  children: step.placedPieces.map((p) {
-                    final tile = tileById(p.tileId);
-                    if (tile == null) return const SizedBox();
-                    final size = 50.0 * p.scale;
-                    return Positioned(
-                      left: p.x * constraints.maxWidth - size / 2,
-                      top: p.y * constraints.maxHeight - size / 2,
-                      child: AnimatedOpacity(
-                        opacity: 1.0,
-                        duration: const Duration(milliseconds: 300),
-                        child: Transform.rotate(
-                          angle: p.rotation * 3.14159 / 180,
-                          child: Container(
-                            width: size, height: size,
-                            decoration: p.isNew
-                              ? BoxDecoration(
-                                  borderRadius: BorderRadius.circular(4),
-                                  boxShadow: [BoxShadow(color: tile.color.withOpacity(0.5), blurRadius: 12, spreadRadius: 2)],
-                                )
-                              : null,
-                            child: CustomPaint(painter: TilePainter(shape: tile.shape, color: p.isNew ? tile.color : tile.color.withOpacity(0.45))),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
-  final BuildStep step;
-  final dynamic tile;
-  final int stepNum;
-  final int total;
-  final bool isLast;
-
-  const _ActionCard({
-    required this.step,
-    required this.tile,
-    required this.stepNum,
-    required this.total,
-    required this.isLast,
-  });
-
-  // Conta quante volte il tileId del passo appare nei pezzi "isNew"
-  int get _newCount => step.placedPieces.where((p) => p.isNew && p.tileId == step.tileId).length;
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = isLast ? const Color(0xFF20BF6B) : (tile?.color ?? const Color(0xFF4B7BEC));
-    final bgColor = isLast ? const Color(0xFFF0FFF6) : (tile != null ? (tile.color as Color).withOpacity(0.07) : Colors.white);
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: accent.withOpacity(0.5), width: 2),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-      ),
-      child: isLast
-          ? _LastStep()
-          : Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // === COLONNA SINISTRA: numero passo ===
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 38, height: 38,
-                      decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
-                      child: Center(
-                        child: Text('$stepNum',
-                          style: GoogleFonts.nunito(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text('di $total',
-                      style: GoogleFonts.nunito(fontSize: 10, color: const Color(0xFFB2BEC3), fontWeight: FontWeight.w600)),
-                  ],
-                ),
-                const SizedBox(width: 14),
-                // === COLONNA CENTRALE: testo azione ===
-                Expanded(
-                  child: Text(
-                    step.action,
-                    style: GoogleFonts.nunito(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF2D3436),
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-                // === COLONNA DESTRA: pezzo da aggiungere con contatore ===
-                if (tile != null) ...[  
-                  const SizedBox(width: 14),
-                  _PieceIndicator(tile: tile, count: _newCount > 0 ? _newCount : 1, accent: accent),
-                ],
-              ],
-            ),
-    );
-  }
-}
-
-class _PieceIndicator extends StatelessWidget {
-  final dynamic tile;
+// ── VISUALIZZATORE 3D del pezzo da aggiungere ────────────────────────────────
+class _Viewer3D extends StatelessWidget {
+  final String tileId;
+  final Color color;
   final int count;
-  final Color accent;
+  final String label;
+  final String action;
 
-  const _PieceIndicator({required this.tile, required this.count, required this.accent});
+  const _Viewer3D({
+    required this.tileId,
+    required this.color,
+    required this.count,
+    required this.label,
+    required this.action,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        // Pezzo grande con sfondo colorato
+        // Testo istruzione
         Container(
-          width: 64, height: 64,
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
-            color: accent.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: accent.withOpacity(0.35), width: 1.5),
+            color: color.withOpacity(0.10),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: color.withOpacity(0.35), width: 1.5),
           ),
-          padding: const EdgeInsets.all(10),
-          child: CustomPaint(painter: TilePainter(shape: tile.shape, color: tile.color)),
-        ),
-        const SizedBox(height: 6),
-        // Badge contatore
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-          decoration: BoxDecoration(
-            color: accent,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            count == 1 ? '× 1 pezzo' : '× $count pezzi',
-            style: GoogleFonts.nunito(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-            ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                child: Text(‘👀’, style: const TextStyle(fontSize: 18)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  action,
+                  style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: const Color(0xFF2D3436), height: 1.4),
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 4),
-        // Nome del pezzo
-        Text(
-          tile.label,
-          style: GoogleFonts.nunito(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: accent,
+        // Modello 3D
+        Expanded(
+          child: Stack(
+            children: [
+              ModelViewer(
+                src: 'assets/models/$tileId.glb',
+                autoRotate: true,
+                autoRotateDelay: 0,
+                rotationPerSecond: '30deg',
+                cameraControls: true,
+                backgroundColor: const Color(0xFFF0F4FF),
+                shadowIntensity: 1,
+              ),
+              // Badge contatore in alto a destra
+              Positioned(
+                top: 16, right: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [BoxShadow(color: color.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 3))],
+                  ),
+                  child: Text(
+                    count == 1 ? '× 1 pezzo' : '× $count pezzi',
+                    style: GoogleFonts.nunito(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
+                  ),
+                ),
+              ),
+              // Nome pezzo in basso
+              Positioned(
+                bottom: 12, left: 0, right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      label,
+                      style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: color),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 }
 
-class _LastStep extends StatelessWidget {
+// ── SCHERMATA INTRODUTTIVA ───────────────────────────────────────────────────
+class _IntroView extends StatelessWidget {
+  final dynamic construction;
+  const _IntroView({required this.construction});
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text('🎉', style: TextStyle(fontSize: 36)),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Complimenti!',
-                style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w900, color: const Color(0xFF20BF6B))),
-              Text('Hai costruito tutto! Sei stato bravissimo 👏',
-                style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF636E72))),
-            ],
-          ),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(construction.emoji, style: const TextStyle(fontSize: 80)),
+            const SizedBox(height: 20),
+            Text(
+              construction.name,
+              style: GoogleFonts.nunito(fontSize: 28, fontWeight: FontWeight.w900, color: const Color(0xFF2D3436)),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              construction.description,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.nunito(fontSize: 15, color: const Color(0xFF636E72), height: 1.5),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF3CD),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('💡', style: TextStyle(fontSize: 18)),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      construction.tip,
+                      style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF856404)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+}
+
+// ── SCHERMATA FINALE ─────────────────────────────────────────────────────────
+class _FinaleView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('🎉', style: TextStyle(fontSize: 80)),
+          const SizedBox(height: 16),
+          Text('Complimenti!',
+            style: GoogleFonts.nunito(fontSize: 32, fontWeight: FontWeight.w900, color: const Color(0xFF20BF6B))),
+          const SizedBox(height: 8),
+          Text('Hai costruito tutto!\nSei stato bravissimo 👏',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF636E72), height: 1.5)),
+        ],
+      ),
     );
   }
 }
