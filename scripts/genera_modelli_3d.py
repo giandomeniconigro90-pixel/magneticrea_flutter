@@ -85,40 +85,6 @@ def add_tri_roof_pyramid(side, base_z, apex_z, is_new):
     obj.data.materials.append(make_mat('triangolo_isoscele_grande', is_new))
     return obj
 
-def add_tri_gable(side, base_z, apex_z, is_new):
-    t = T / 2
-    if side == 'N':
-        verts = [(-0.5,-0.5-t,base_z),(0.5,-0.5-t,base_z),(0.0,-0.5-t,apex_z),
-                 (-0.5,-0.5+t,base_z),(0.5,-0.5+t,base_z),(0.0,-0.5+t,apex_z)]
-    elif side == 'S':
-        verts = [(-0.5,0.5+t,base_z),(0.5,0.5+t,base_z),(0.0,0.5+t,apex_z),
-                 (-0.5,0.5-t,base_z),(0.5,0.5-t,base_z),(0.0,0.5-t,apex_z)]
-    faces = [[0,1,2],[5,4,3],[0,3,4,1],[1,4,5,2],[2,5,3,0]]
-    mesh = bpy.data.meshes.new(f"gable_{side}")
-    mesh.from_pydata(verts, [], faces)
-    mesh.update()
-    obj = bpy.data.objects.new(f"gable_{side}", mesh)
-    bpy.context.collection.objects.link(obj)
-    obj.data.materials.append(make_mat('triangolo_isoscele_grande', is_new))
-    return obj
-
-def add_roof_panel(side, base_z, apex_z, is_new):
-    t = T / 2
-    if side == 'E':
-        verts = [( 0.5,-0.5,base_z),( 0.5, 0.5,base_z),( t, 0.5,apex_z),( t,-0.5,apex_z),
-                 (-t,-0.5,apex_z),(-t, 0.5,apex_z),(-0.5,-0.5,base_z),(-0.5, 0.5,base_z)]
-    elif side == 'W':
-        verts = [(-0.5,-0.5,base_z),(-0.5, 0.5,base_z),(-t, 0.5,apex_z),(-t,-0.5,apex_z),
-                 ( t,-0.5,apex_z),( t, 0.5,apex_z),( 0.5,-0.5,base_z),( 0.5, 0.5,base_z)]
-    faces = [[0,1,2,3],[7,6,5,4],[0,6,7,1],[0,3,4,6],[1,7,5,2],[3,2,5,4]]
-    mesh = bpy.data.meshes.new(f"roof_{side}")
-    mesh.from_pydata(verts, [], faces)
-    mesh.update()
-    obj = bpy.data.objects.new(f"roof_{side}", mesh)
-    bpy.context.collection.objects.link(obj)
-    obj.data.materials.append(make_mat('quadrato_grande', is_new))
-    return obj
-
 def add_camera(location=(4.5, -4.5, 4.5)):
     bpy.ops.object.camera_add(location=location)
     cam = bpy.context.object
@@ -142,12 +108,6 @@ def draw_step(pieces):
         elif kind == 'tri_pyramid':
             _, side, base_z, apex_z, is_new = item
             add_tri_roof_pyramid(side, base_z, apex_z, is_new)
-        elif kind == 'tri_gable':
-            _, side, base_z, apex_z, is_new = item
-            add_tri_gable(side, base_z, apex_z, is_new)
-        elif kind == 'roof_panel':
-            _, side, base_z, apex_z, is_new = item
-            add_roof_panel(side, base_z, apex_z, is_new)
 
 # ── HELPER: pannello singolo già posato (semitrasparente) ───────────────
 def quad_old(face, piano):
@@ -189,42 +149,10 @@ for i, side_new in enumerate(tetto_sides):
 # Finale
 torre_steps.append([])
 
-# ── CASA: 8 step (1 pannello per volta) + intro + finale = 10 GLB ───────
-# Muri: N,S,E,W — Tetto: gable_N, gable_S, roof_E, roof_W
-
-casa_steps = [[]]
-
-wall_faces = ['N','S','E','W']
-for i, face_new in enumerate(wall_faces):
-    done_walls = [('quad', f, {'N':(0,-0.5),'S':(0,0.5),'E':(0.5,0),'W':(-0.5,0)}[f][0],
-                              {'N':(0,-0.5),'S':(0,0.5),'E':(0.5,0),'W':(-0.5,0)}[f][1],
-                              S/2, False) for f in wall_faces[:i]]
-    cx = {'N':0,'S':0,'E':0.5,'W':-0.5}[face_new]
-    cy = {'N':-0.5,'S':0.5,'E':0,'W':0}[face_new]
-    step = done_walls + [('quad', face_new, cx, cy, S/2, True)]
-    casa_steps.append(step)
-
-all_walls = [('quad', f, {'N':(0,-0.5),'S':(0,0.5),'E':(0.5,0),'W':(-0.5,0)}[f][0],
-                         {'N':(0,-0.5),'S':(0,0.5),'E':(0.5,0),'W':(-0.5,0)}[f][1],
-                         S/2, False) for f in wall_faces]
-
-roof_pieces = [
-    ('tri_gable',  'N', 1.0, 1.9),
-    ('tri_gable',  'S', 1.0, 1.9),
-    ('roof_panel', 'E', 1.0, 1.9),
-    ('roof_panel', 'W', 1.0, 1.9),
-]
-for i, rp in enumerate(roof_pieces):
-    done_roof = [(rp2[0], rp2[1], rp2[2], rp2[3], False) for rp2 in roof_pieces[:i]]
-    step = all_walls + done_roof + [(rp[0], rp[1], rp[2], rp[3], True)]
-    casa_steps.append(step)
-
-casa_steps.append([])
-
 # ── ESECUZIONE ──────────────────────────────────────────────────
+# NOTA: la Casa è is3d=false, usa la guida 2D flat — nessun GLB necessario.
 CONSTRUCTIONS = {
     'torre': (torre_steps, (4.5, -4.5, 4.5)),
-    'casa':  (casa_steps,  (3.5, -3.5, 2.8)),
 }
 
 total = sum(len(s) for s, _ in CONSTRUCTIONS.values())
@@ -244,4 +172,3 @@ for cid, (steps, cam_loc) in CONSTRUCTIONS.items():
 
 print(f"\n✅ {done} file .glb generati in:\n{OUTPUT_DIR}")
 print(f"  torre: {len(torre_steps)} step")
-print(f"  casa:  {len(casa_steps)} step")
