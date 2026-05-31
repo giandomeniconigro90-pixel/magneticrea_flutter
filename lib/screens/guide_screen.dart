@@ -56,14 +56,10 @@ class _GuideScreenState extends State<GuideScreen>
     _fadeCtrl.forward();
   }
 
-  /// Restituisce il path del GLB per il passo corrente.
-  /// Step 0 (intro) e ultimo step (finale) non hanno GLB di assemblaggio
-  /// quindi mostrano la view speciale.
   String? _glbPath(int stepIndex) {
     final isFirst = stepIndex == 0;
     final isLast  = stepIndex == construction.steps.length - 1;
     if (isFirst || isLast) return null;
-    // step_idx parte da 1 nel nome file (step1 = primo passo reale)
     return 'assets/models/steps/${construction.id}_step${stepIndex + 1}.glb';
   }
 
@@ -180,9 +176,6 @@ class _GuideScreenState extends State<GuideScreen>
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP VIEW — mostra il modello 3D del passo corrente
-// ─────────────────────────────────────────────────────────────────────────────
 class _StepView extends StatelessWidget {
   final BuildStep step;
   final TileType? tile;
@@ -205,7 +198,6 @@ class _StepView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // ── Banner istruzione ────────────────────────────────────────
         Container(
           margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -265,8 +257,6 @@ class _StepView extends StatelessWidget {
             ],
           ),
         ),
-
-        // ── Viewer 3D principale (occupa tutto lo spazio rimasto) ────
         Expanded(
           child: glbPath != null
               ? _Viewer3D(glbPath: glbPath!, tileColor: tile?.color)
@@ -277,9 +267,6 @@ class _StepView extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// VIEWER 3D — carica il GLB del passo corrente a tutto schermo
-// ─────────────────────────────────────────────────────────────────────────────
 class _Viewer3D extends StatelessWidget {
   final String glbPath;
   final Color? tileColor;
@@ -310,21 +297,22 @@ class _Viewer3D extends StatelessWidget {
         child: ModelViewer(
           src: glbPath,
           autoRotate: false,
-          cameraControls: true,         // il bambino può ruotare con le dita!
+          cameraControls: true,
           backgroundColor: Colors.white,
           shadowIntensity: 0.4,
           shadowSoftness: 1.0,
           exposure: 1.2,
-          fieldOfView: '45deg',
+          // ── Zoom iniziale più lontano ────────────────────────────
+          fieldOfView: '25deg',
+          cameraOrbit: '45deg 60deg 8m',
+          minCameraOrbit: 'auto auto 3m',
+          maxCameraOrbit: 'auto auto 20m',
         ),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FALLBACK SCHEMA 2D (usato se il GLB non è disponibile)
-// ─────────────────────────────────────────────────────────────────────────────
 class _ProgressSchema extends StatelessWidget {
   final BuildStep step;
   final Animation<double> pulseAnim;
@@ -401,9 +389,6 @@ class _ProgressSchema extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// INTRO VIEW
-// ─────────────────────────────────────────────────────────────────────────────
 class _IntroView extends StatelessWidget {
   final dynamic construction;
   const _IntroView({required this.construction});
@@ -468,9 +453,6 @@ class _IntroView extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FINALE VIEW
-// ─────────────────────────────────────────────────────────────────────────────
 class _FinaleView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
