@@ -1,0 +1,3 @@
+Leggi il file docs/REGOLE_COSTRUZIONI.md nel repository
+giandomeniconigro90-pixel/magneticrea_flutter
+e seguilo come guida per tutto il lavoro su MagnetiCrea.
