@@ -5,6 +5,7 @@ import 'package:model_viewer_plus/model_viewer_plus.dart';
 import '../data/constructions.dart';
 import '../data/tile_types.dart';
 import '../models/build_step.dart';
+import '../models/tile_type.dart';
 import '../widgets/tile_painter.dart';
 
 class GuideScreen extends StatefulWidget {
@@ -63,8 +64,7 @@ class _GuideScreenState extends State<GuideScreen>
     final isFirst = _currentStep == 0;
     final tile = step.tileId != null ? tileById(step.tileId!) : null;
     final progress = (_currentStep + 1) / steps.length;
-    final newCount =
-        step.placedPieces.where((p) => p.isNew == true).length;
+    final newCount = step.placedPieces.where((p) => p.isNew == true).length;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4FF),
@@ -77,9 +77,7 @@ class _GuideScreenState extends State<GuideScreen>
           child: LinearProgressIndicator(
             value: progress,
             backgroundColor: const Color(0xFFE0E0E0),
-            color: isLast
-                ? const Color(0xFF20BF6B)
-                : const Color(0xFF4B7BEC),
+            color: isLast ? const Color(0xFF20BF6B) : const Color(0xFF4B7BEC),
             minHeight: 6,
           ),
         ),
@@ -94,8 +92,7 @@ class _GuideScreenState extends State<GuideScreen>
                   : isFirst
                       ? _IntroView(construction: construction)
                       : _StepView(
-                          key: ValueKey(
-                              '${widget.constructionId}_$_currentStep'),
+                          key: ValueKey('${widget.constructionId}_$_currentStep'),
                           step: step,
                           tile: tile,
                           newCount: newCount,
@@ -104,14 +101,12 @@ class _GuideScreenState extends State<GuideScreen>
                         ),
             ),
           ),
-          // ── NAVIGAZIONE ────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -131,14 +126,12 @@ class _GuideScreenState extends State<GuideScreen>
                     child: OutlinedButton(
                       onPressed: () => _goTo(_currentStep - 1),
                       style: OutlinedButton.styleFrom(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16)),
                       ),
                       child: Text('\u2190 Indietro',
-                          style: GoogleFonts.nunito(
-                              fontWeight: FontWeight.w700)),
+                          style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
                     ),
                   ),
                 if (_currentStep > 0) const SizedBox(width: 12),
@@ -149,8 +142,7 @@ class _GuideScreenState extends State<GuideScreen>
                         ? () => Navigator.pop(context)
                         : () => _goTo(_currentStep + 1),
                     style: ElevatedButton.styleFrom(
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
                       backgroundColor: isLast
@@ -158,9 +150,7 @@ class _GuideScreenState extends State<GuideScreen>
                           : const Color(0xFF4B7BEC),
                     ),
                     child: Text(
-                      isLast
-                          ? '\uD83C\uDF89 Finito!'
-                          : 'Avanti \u2192',
+                      isLast ? '\uD83C\uDF89 Finito!' : 'Avanti \u2192',
                       style: GoogleFonts.nunito(
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -177,7 +167,6 @@ class _GuideScreenState extends State<GuideScreen>
   }
 }
 
-// ── SCHERMATA PASSO con schema progressivo + pezzo 3D ──────────────────────
 class _StepView extends StatelessWidget {
   final BuildStep step;
   final TileType? tile;
@@ -198,11 +187,9 @@ class _StepView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // ── Istruzione testuale ──
         Container(
           margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: tile != null
                 ? tile!.color.withOpacity(0.10)
@@ -221,11 +208,11 @@ class _StepView extends StatelessWidget {
                 Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(
-                      color: tile!.color, shape: BoxShape.circle),
+                  decoration:
+                      BoxDecoration(color: tile!.color, shape: BoxShape.circle),
                   child: CustomPaint(
-                    painter: TilePainter(
-                        shape: tile!.shape, color: Colors.white),
+                    painter:
+                        TilePainter(shape: tile!.shape, color: Colors.white),
                   ),
                 ),
               if (tile != null) const SizedBox(width: 10),
@@ -242,8 +229,8 @@ class _StepView extends StatelessWidget {
               if (tile != null && newCount > 0)
                 Container(
                   margin: const EdgeInsets.only(left: 8),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: tile!.color,
                     borderRadius: BorderRadius.circular(12),
@@ -259,11 +246,9 @@ class _StepView extends StatelessWidget {
             ],
           ),
         ),
-        // ── Schema progressivo (sopra) + Pezzo 3D (sotto) ──
         Expanded(
           child: Row(
             children: [
-              // Schema costruzione progressivo
               Expanded(
                 flex: 3,
                 child: _ProgressSchema(
@@ -271,7 +256,6 @@ class _StepView extends StatelessWidget {
                   pulseAnim: pulseAnim,
                 ),
               ),
-              // Pezzo 3D piccolo a destra
               if (tile != null)
                 Container(
                   width: 140,
@@ -279,8 +263,8 @@ class _StepView extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: tile!.color.withOpacity(0.4), width: 2),
+                    border:
+                        Border.all(color: tile!.color.withOpacity(0.4), width: 2),
                     boxShadow: [
                       BoxShadow(
                           color: tile!.color.withOpacity(0.15),
@@ -323,13 +307,11 @@ class _StepView extends StatelessWidget {
   }
 }
 
-// ── Schema progressivo con pezzi colorati/grigi ────────────────────────────
 class _ProgressSchema extends StatelessWidget {
   final BuildStep step;
   final Animation<double> pulseAnim;
 
-  const _ProgressSchema(
-      {required this.step, required this.pulseAnim});
+  const _ProgressSchema({required this.step, required this.pulseAnim});
 
   @override
   Widget build(BuildContext context) {
@@ -361,13 +343,10 @@ class _ProgressSchema extends StatelessWidget {
                               ? 1.15
                               : tile.shape == TileShape.squareSmall
                                   ? 0.8
-                                  : tile.shape ==
-                                          TileShape.triangleIsoscaleSmall
+                                  : tile.shape == TileShape.triangleIsoscaleSmall
                                       ? 0.7
                                       : 1.0);
-              final color = isNew
-                  ? tile.color
-                  : tile.color.withOpacity(0.35);
+              final color = isNew ? tile.color : tile.color.withOpacity(0.35);
 
               Widget pieceWidget = CustomPaint(
                 size: Size(size, size),
@@ -384,10 +363,8 @@ class _ProgressSchema extends StatelessWidget {
               if (isNew) {
                 pieceWidget = AnimatedBuilder(
                   animation: pulseAnim,
-                  builder: (_, child) => Transform.scale(
-                    scale: pulseAnim.value,
-                    child: child,
-                  ),
+                  builder: (_, child) =>
+                      Transform.scale(scale: pulseAnim.value, child: child),
                   child: pieceWidget,
                 );
               }
@@ -405,7 +382,6 @@ class _ProgressSchema extends StatelessWidget {
   }
 }
 
-// ── SCHERMATA INTRODUTTIVA ─────────────────────────────────────────────────
 class _IntroView extends StatelessWidget {
   final dynamic construction;
   const _IntroView({required this.construction});
@@ -418,8 +394,7 @@ class _IntroView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(construction.emoji,
-                style: const TextStyle(fontSize: 80)),
+            Text(construction.emoji, style: const TextStyle(fontSize: 80)),
             const SizedBox(height: 20),
             Text(
               construction.name,
@@ -433,14 +408,12 @@ class _IntroView extends StatelessWidget {
               construction.description,
               textAlign: TextAlign.center,
               style: GoogleFonts.nunito(
-                  fontSize: 15,
-                  color: const Color(0xFF636E72),
-                  height: 1.5),
+                  fontSize: 15, color: const Color(0xFF636E72), height: 1.5),
             ),
             const SizedBox(height: 20),
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 20, vertical: 10),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFF3CD),
                 borderRadius: BorderRadius.circular(16),
@@ -448,8 +421,7 @@ class _IntroView extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('\uD83D\uDCA1',
-                      style: TextStyle(fontSize: 18)),
+                  const Text('\uD83D\uDCA1', style: TextStyle(fontSize: 18)),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
@@ -470,7 +442,6 @@ class _IntroView extends StatelessWidget {
   }
 }
 
-// ── SCHERMATA FINALE ───────────────────────────────────────────────────────
 class _FinaleView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -478,8 +449,7 @@ class _FinaleView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('\uD83C\uDF89',
-              style: TextStyle(fontSize: 80)),
+          const Text('\uD83C\uDF89', style: TextStyle(fontSize: 80)),
           const SizedBox(height: 16),
           Text('Complimenti!',
               style: GoogleFonts.nunito(
