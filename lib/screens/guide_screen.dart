@@ -74,16 +74,19 @@ class _GuideScreenState extends State<GuideScreen> with SingleTickerProviderStat
             ),
           ),
           // Card azione
-          Expanded(
-            flex: 4,
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: _ActionCard(step: step, tile: tile, stepNum: _currentStep + 1, total: steps.length, isLast: isLast),
+          FadeTransition(
+            opacity: _fadeAnim,
+            child: _ActionCard(
+              step: step,
+              tile: tile,
+              stepNum: _currentStep + 1,
+              total: steps.length,
+              isLast: isLast,
             ),
           ),
           // Bottoni navigazione
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
             child: Row(
               children: [
                 if (_currentStep > 0)
@@ -129,7 +132,7 @@ class _SchemaCanvas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -180,69 +183,154 @@ class _ActionCard extends StatelessWidget {
   final int total;
   final bool isLast;
 
-  const _ActionCard({required this.step, required this.tile, required this.stepNum, required this.total, required this.isLast});
+  const _ActionCard({
+    required this.step,
+    required this.tile,
+    required this.stepNum,
+    required this.total,
+    required this.isLast,
+  });
+
+  // Conta quante volte il tileId del passo appare nei pezzi "isNew"
+  int get _newCount => step.placedPieces.where((p) => p.isNew && p.tileId == step.tileId).length;
 
   @override
   Widget build(BuildContext context) {
+    final accent = isLast ? const Color(0xFF20BF6B) : (tile?.color ?? const Color(0xFF4B7BEC));
+    final bgColor = isLast ? const Color(0xFFF0FFF6) : (tile != null ? (tile.color as Color).withOpacity(0.07) : Colors.white);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isLast ? const Color(0xFFF0FFF6) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isLast ? const Color(0xFF20BF6B) : const Color(0xFF4B7BEC), width: 2),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12)],
+        color: bgColor,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: accent.withOpacity(0.5), width: 2),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
       ),
-      child: Row(
-        children: [
-          // Numero passo
-          Container(
-            width: 42, height: 42,
-            decoration: BoxDecoration(
-              color: isLast ? const Color(0xFF20BF6B) : const Color(0xFF4B7BEC),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                isLast ? '✓' : '$stepNum',
-                style: GoogleFonts.nunito(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          // Icona pezzo
-          if (tile != null) ...[  
-            SizedBox(
-              width: 48, height: 48,
-              child: CustomPaint(painter: TilePainter(shape: tile.shape, color: tile.color)),
-            ),
-            const SizedBox(width: 14),
-          ],
-          // Testo azione
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+      child: isLast
+          ? _LastStep()
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  step.action,
-                  style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: const Color(0xFF2D3436), height: 1.35),
+                // === COLONNA SINISTRA: numero passo ===
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 38, height: 38,
+                      decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+                      child: Center(
+                        child: Text('$stepNum',
+                          style: GoogleFonts.nunito(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text('di $total',
+                      style: GoogleFonts.nunito(fontSize: 10, color: const Color(0xFFB2BEC3), fontWeight: FontWeight.w600)),
+                  ],
                 ),
-                if (tile != null) ...[  
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(color: tile.bgColor, borderRadius: BorderRadius.circular(20)),
-                    child: Text(tile.short, style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: tile.color)),
+                const SizedBox(width: 14),
+                // === COLONNA CENTRALE: testo azione ===
+                Expanded(
+                  child: Text(
+                    step.action,
+                    style: GoogleFonts.nunito(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF2D3436),
+                      height: 1.4,
+                    ),
                   ),
+                ),
+                // === COLONNA DESTRA: pezzo da aggiungere con contatore ===
+                if (tile != null) ...[  
+                  const SizedBox(width: 14),
+                  _PieceIndicator(tile: tile, count: _newCount > 0 ? _newCount : 1, accent: accent),
                 ],
-                const SizedBox(height: 4),
-                Text('Passo $stepNum di $total', style: GoogleFonts.nunito(fontSize: 11, color: const Color(0xFFB2BEC3))),
               ],
             ),
+    );
+  }
+}
+
+class _PieceIndicator extends StatelessWidget {
+  final dynamic tile;
+  final int count;
+  final Color accent;
+
+  const _PieceIndicator({required this.tile, required this.count, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Pezzo grande con sfondo colorato
+        Container(
+          width: 64, height: 64,
+          decoration: BoxDecoration(
+            color: accent.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: accent.withOpacity(0.35), width: 1.5),
           ),
-        ],
-      ),
+          padding: const EdgeInsets.all(10),
+          child: CustomPaint(painter: TilePainter(shape: tile.shape, color: tile.color)),
+        ),
+        const SizedBox(height: 6),
+        // Badge contatore
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+          decoration: BoxDecoration(
+            color: accent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            count == 1 ? '× 1 pezzo' : '× $count pezzi',
+            style: GoogleFonts.nunito(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        // Nome del pezzo
+        Text(
+          tile.label,
+          style: GoogleFonts.nunito(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: accent,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+}
+
+class _LastStep extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text('🎉', style: TextStyle(fontSize: 36)),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Complimenti!',
+                style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w900, color: const Color(0xFF20BF6B))),
+              Text('Hai costruito tutto! Sei stato bravissimo 👏',
+                style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF636E72))),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
