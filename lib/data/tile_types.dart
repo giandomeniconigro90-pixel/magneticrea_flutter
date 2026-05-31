@@ -36,7 +36,7 @@ const List<TileType> kTileTypes = [
     category: TileCategory.structural,
   ),
 
-  // ── TRIANGOLI ───────────────────────────────────────────────────
+  // ── TRIANGOLI ──────────────────────────────────────────────────
   TileType(
     id: 'triangolo_equilatero',
     label: 'Triangolo Equilatero',
@@ -142,13 +142,13 @@ const List<TileType> kTileTypes = [
     isOpen: true,
   ),
 
-  // Finestra griglia 2×2
+  // Finestra griglia 2×2 — colore blu fedele alla tile fisica
   TileType(
     id: 'finestra',
     label: 'Finestra',
-    short: 'Finestra Rosa',
-    color: Color(0xFFE84393),
-    bgColor: Color(0xFFFFE5F3),
+    short: 'Finestra Blu',
+    color: Color(0xFF1565C0),
+    bgColor: Color(0xFFE3F2FD),
     shape: TileShape.window,
     category: TileCategory.opening,
     isOpen: true,
