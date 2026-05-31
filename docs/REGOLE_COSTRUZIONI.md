@@ -18,19 +18,47 @@
 
 ## 🧱 Le Piastrelle Disponibili (`tile_types.dart`)
 
-Ogni piastrella ha un `id` univoco, una forma (`TileShape`) e un colore:
+Ogni piastrella ha un `id` univoco, una forma (`TileShape`), un colore e la proprietà `isOpen`.
 
-| ID | Nome | Forma | Colore |
-|---|---|---|---|
-| `quadrato_grande` | Quadrato grande | `squareLarge` | Rosso `#FF6B6B` |
-| `quadrato_piccolo` | Quadrato piccolo | `squareSmall` | Arancio `#FFA502` |
-| `triangolo_isoscele_grande` | Triangolo isoscele grande | `triangleIsoscaleLarge` | Blu `#45AAF2` |
-| `triangolo_isoscele_piccolo` | Triangolo isoscele piccolo | `triangleIsoscaleSmall` | Verde acqua `#26D0CE` |
-| `triangolo_equilatero` | Triangolo equilatero | `triangleEquilateral` | Verde `#20BF6B` |
-| `triangolo_rettangolo` | Triangolo rettangolo | `triangleRight` | Viola `#A55EEA` |
-| `rombo` | Rombo | `rhombus` | Rosso acceso `#FC5C65` |
-| `pentagono` | Pentagono | `pentagon` | Arancio `#FD9644` |
-| `esagono` | Esagono | `hexagon` | Blu `#4B7BEC` |
+| ID | Nome | Shape | Colore | isOpen |
+|---|---|---|---|---|
+| `quadrato_grande` | Quadrato Grande | `squareLarge` | Rosso `#FF6B6B` | false |
+| `quadrato_piccolo` | Quadrato Piccolo | `squareSmall` | Arancio `#FF9F43` | false |
+| `rettangolo` | Rettangolo | `rectangle` | Verde acqua `#26D0CE` | false |
+| `triangolo_equilatero` | Triangolo Equilatero | `triangleEquilateral` | Verde `#20BF6B` | false |
+| `triangolo_isoscele_grande` | Triangolo Isoscele Grande | `triangleIsoscaleLarge` | Blu `#45AAF2` | false |
+| `triangolo_isoscele_piccolo` | Triangolo Isoscele Piccolo | `triangleIsoscaleSmall` | Celeste `#2BCBBA` | false |
+| `triangolo_rettangolo` | Triangolo Rettangolo | `triangleRight` | Viola `#A55EEA` | false |
+| `rombo` | Rombo | `rhombus` | Rosso acceso `#FC5C65` | false |
+| `pentagono` | Pentagono | `pentagon` | Arancio `#FD9644` | false |
+| `esagono` | Esagono | `hexagon` | Blu `#4B7BEC` | false |
+| `porta` | Porta | `door` | Rosa `#E84393` | **true** ⚠️ |
+| `finestra` | Finestra | `window` | Rosa `#E84393` | **true** ⚠️ |
+| `base_macchina` | Base Macchina | `carBase` | Azzurro `#45AAF2` | false |
+
+---
+
+## ⚠️ Regola isOpen (FONDAMENTALE)
+
+La proprietà `isOpen: true` indica che la piastrella ha **aperture passanti** (arco, griglia, foro).
+
+### ❌ Le piastrelle `isOpen: true` NON possono essere usate come:
+- **Base / pavimento** → la pallina o l'oggetto cadrebbe
+- **Tetto / copertura** → non copre, lascia passare tutto
+- **Parete contenitiva** → non trattiene nulla (piste per palline, vasche, ecc.)
+
+### ✅ Le piastrelle `isOpen: true` POSSONO essere usate come:
+- Pareti decorative (es. facciata di una casa con porta)
+- Elementi architettonici (portali, finestre di castelli)
+- Pannelli laterali dove il passaggio è voluto (es. entrata di un tunnel)
+
+### Piastrelle isOpen attualmente
+| ID | Apertura |
+|---|---|
+| `porta` | Arco passante nella metà inferiore |
+| `finestra` | Griglia 2×2 passante al centro |
+
+> 💡 **Regola pratica AI:** Prima di assegnare `porta` o `finestra` a uno step, verifica che il ruolo strutturale lo permetta.
 
 ---
 
@@ -158,7 +186,18 @@ maxCameraOrbit: 'auto auto 20m'
 ```python
 COLORS = {
     'quadrato_grande':           (1.0,  0.42, 0.42, 1),  # rosso
+    'quadrato_piccolo':          (1.0,  0.62, 0.26, 1),  # arancio
+    'rettangolo':                (0.15, 0.82, 0.80, 1),  # verde acqua
     'triangolo_isoscele_grande': (0.27, 0.67, 0.95, 1),  # blu
+    'triangolo_isoscele_piccolo':(0.17, 0.80, 0.73, 1),  # celeste
+    'triangolo_equilatero':      (0.13, 0.75, 0.42, 1),  # verde
+    'triangolo_rettangolo':      (0.65, 0.37, 0.92, 1),  # viola
+    'rombo':                     (0.99, 0.36, 0.40, 1),  # rosso acceso
+    'pentagono':                 (0.99, 0.59, 0.27, 1),  # arancio
+    'esagono':                   (0.29, 0.48, 0.93, 1),  # blu
+    'porta':                     (0.91, 0.26, 0.58, 1),  # rosa
+    'finestra':                  (0.91, 0.26, 0.58, 1),  # rosa
+    'base_macchina':             (0.27, 0.67, 0.95, 1),  # azzurro
 }
 ```
 
@@ -313,5 +352,5 @@ Python:           3.x (script Blender)
 
 ---
 
-*Documento generato dalla sessione di sviluppo del 31 maggio 2026.*
+*Documento aggiornato il 31 maggio 2026 — aggiunta proprietà isOpen, nuove piastrelle: rettangolo, porta, finestra, base_macchina.*
 *Aggiornare questo file ogni volta che si aggiungono costruzioni o si modificano le regole.*
