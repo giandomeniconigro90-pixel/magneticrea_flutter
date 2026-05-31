@@ -43,7 +43,6 @@ class TilePainter extends CustomPainter {
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
 
       // Quadrato grande con foro quadrato centrale (cornice rossa)
-      // Fedele alla foto: cornice spessa ~18% per lato, foro quadrato centrato
       case TileShape.squareLargeOpen:
         final outer = Path()
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
@@ -51,7 +50,7 @@ class TilePainter extends CustomPainter {
           ..addRect(Rect.fromLTWH(w * 0.23, h * 0.23, w * 0.54, h * 0.54));
         return Path.combine(PathOperation.difference, outer, inner);
 
-      // ── RETTANGOLO ─────────────────────────────────────────────────
+      // ── RETTANGOLO ──────────────────────────────────────────────────
       case TileShape.rectangle:
         return Path()
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.15, w * 0.9, h * 0.7));
@@ -78,7 +77,6 @@ class TilePainter extends CustomPainter {
           ..lineTo(w * 0.1,  h * 0.88)
           ..close();
 
-      // Triangolo rettangolo: angolo retto in basso a sinistra
       case TileShape.triangleRight:
         return Path()
           ..moveTo(w * 0.05, h * 0.05)
@@ -114,8 +112,9 @@ class TilePainter extends CustomPainter {
           ..lineTo(w * 0.05, h * 0.27)
           ..close();
 
-      // ── APERTURE STANDARD ─────────────────────────────────────────────
-      // Porta: rettangolo con semicerchio in cima (arco a tutto sesto)
+      // ── APERTURE STANDARD ───────────────────────────────────────────
+
+      // Porta: rettangolo con semicerchio in cima
       case TileShape.door:
         final doorPath = Path();
         final archCy = h * 0.45;
@@ -125,39 +124,54 @@ class TilePainter extends CustomPainter {
           ..lineTo(w * 0.2, archCy)
           ..arcTo(
             Rect.fromCircle(center: Offset(w * 0.5, archCy), radius: archR),
-            math.pi,
-            -math.pi,
-            false,
+            math.pi, -math.pi, false,
           )
           ..lineTo(w * 0.8, h * 0.92)
           ..close();
         return doorPath;
 
-      // Porta pentagonale (apertura a forma di casa): rettangolo + tetto a punta
-      // Fedele alla foto rossa: cornice quadrata, foro interno pentagonale
+      // Porta pentagonale: cornice con foro a forma di casetta
       case TileShape.doorPentagon:
         final dpOuter = Path()
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
-        // foro interno: rettangolo nella metà inferiore + triangolo in cima
         final dpInner = Path()
-          ..moveTo(w * 0.22, h * 0.88)   // basso sinistra
-          ..lineTo(w * 0.22, h * 0.48)   // sinistra parete verticale
-          ..lineTo(w * 0.50, h * 0.18)   // punta del tetto
-          ..lineTo(w * 0.78, h * 0.48)   // destra parete verticale
-          ..lineTo(w * 0.78, h * 0.88)   // basso destra
+          ..moveTo(w * 0.22, h * 0.88)
+          ..lineTo(w * 0.22, h * 0.48)
+          ..lineTo(w * 0.50, h * 0.18)
+          ..lineTo(w * 0.78, h * 0.48)
+          ..lineTo(w * 0.78, h * 0.88)
           ..close();
         return Path.combine(PathOperation.difference, dpOuter, dpInner);
 
-      // Finestra: quadrato con griglia interna 2×2 (cornice + barre)
+      // Finestra: cornice quadrata con 4 fori rettangolari arrotondati (griglia 2×2)
+      // Fedele alla foto blu: cornice spessa, 4 riquadri con angoli arrotondati,
+      // separati da barre orizzontale e verticale centrali.
       case TileShape.window:
-        final winPath = Path();
-        winPath.addRect(Rect.fromLTWH(w * 0.1, h * 0.1, w * 0.8, h * 0.8));
-        winPath.addRect(Rect.fromLTWH(w * 0.1, h * 0.47, w * 0.8, h * 0.06));
-        winPath.addRect(Rect.fromLTWH(w * 0.47, h * 0.1, w * 0.06, h * 0.8));
-        return winPath;
+        final winOuter = Path()
+          ..addRRect(RRect.fromRectAndRadius(
+            Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9),
+            Radius.circular(w * 0.06),
+          ));
+        // Spessore cornice e barre
+        const bord = 0.12; // bordo esterno
+        const bar  = 0.05; // metà spessore barra centrale
+        const r    = 0.04; // raggio angoli fori interni
+        // 4 fori: top-left, top-right, bottom-left, bottom-right
+        final holes = [
+          Rect.fromLTWH(w*(bord),      h*(bord),      w*(0.5-bord-bar), h*(0.5-bord-bar)),
+          Rect.fromLTWH(w*(0.5+bar),   h*(bord),      w*(0.5-bord-bar), h*(0.5-bord-bar)),
+          Rect.fromLTWH(w*(bord),      h*(0.5+bar),   w*(0.5-bord-bar), h*(0.5-bord-bar)),
+          Rect.fromLTWH(w*(0.5+bar),   h*(0.5+bar),   w*(0.5-bord-bar), h*(0.5-bord-bar)),
+        ];
+        Path result = winOuter;
+        for (final rect in holes) {
+          final hole = Path()
+            ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(w * r)));
+          result = Path.combine(PathOperation.difference, result, hole);
+        }
+        return result;
 
-      // ── FUNZIONALI STANDARD ────────────────────────────────────────────
-      // Base macchina: scocca arrotondata + 4 ruote agli angoli
+      // ── FUNZIONALI STANDARD ───────────────────────────────────────────
       case TileShape.carBase:
         final carPath = Path();
         carPath.addRRect(
@@ -176,21 +190,16 @@ class TilePainter extends CustomPainter {
         return carPath;
 
       // ── CASTLE SPECIAL ───────────────────────────────────────────────
-
-      // Quarto di cerchio: settore circolare 90°
       case TileShape.quarterCircle:
         return Path()
           ..moveTo(w * 0.05, h * 0.95)
           ..arcTo(
             Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9),
-            math.pi / 2,
-            -math.pi / 2,
-            false,
+            math.pi / 2, -math.pi / 2, false,
           )
           ..lineTo(w * 0.05, h * 0.95)
           ..close();
 
-      // Ponte levatoio: cornice con apertura ad arco passante
       case TileShape.drawbridge:
         final dbPath = Path()
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
@@ -205,7 +214,6 @@ class TilePainter extends CustomPainter {
           ..close();
         return Path.combine(PathOperation.difference, dbPath, dbInner);
 
-      // Scala a spirale: cerchio esterno + cerchi concentrici stilizzati
       case TileShape.spiralStaircase:
         final spPath = Path();
         spPath.addOval(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
@@ -213,7 +221,6 @@ class TilePainter extends CustomPainter {
         spPath.addOval(Rect.fromLTWH(w * 0.35, h * 0.35, w * 0.3, h * 0.3));
         return spPath;
 
-      // Balcone: piano + parapetto con montanti
       case TileShape.balcony:
         final balPath = Path();
         balPath.addRect(Rect.fromLTWH(w * 0.05, h * 0.45, w * 0.9, h * 0.4));
@@ -223,15 +230,14 @@ class TilePainter extends CustomPainter {
         }
         return balPath;
 
-      // Finestra castle: pannello con apertura ogivale a sesto acuto
       case TileShape.windowCastle:
         final wcOuter = Path()
           ..addRect(Rect.fromLTWH(w * 0.05, h * 0.05, w * 0.9, h * 0.9));
         final wcInner = Path();
-        final cx     = w * 0.5;
-        final baseY  = h * 0.82;
-        final tipY   = h * 0.15;
-        final halfW  = w * 0.22;
+        final cx    = w * 0.5;
+        final baseY = h * 0.82;
+        final tipY  = h * 0.15;
+        final halfW = w * 0.22;
         wcInner
           ..moveTo(cx - halfW, baseY)
           ..arcTo(
