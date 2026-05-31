@@ -7,6 +7,9 @@ class TileType {
   final Color color;
   final Color bgColor;
   final TileShape shape;
+  /// true = la piastrella ha aperture passanti (es. porta, finestra).
+  /// Non usare come base, pavimento, tetto o parete contenitiva.
+  final bool isOpen;
 
   const TileType({
     required this.id,
@@ -15,12 +18,14 @@ class TileType {
     required this.color,
     required this.bgColor,
     required this.shape,
+    this.isOpen = false,
   });
 }
 
 enum TileShape {
   squareLarge,
   squareSmall,
+  rectangle,
   triangleEquilateral,
   triangleIsoscaleLarge,
   triangleIsoscaleSmall,
@@ -28,4 +33,7 @@ enum TileShape {
   rhombus,
   pentagon,
   hexagon,
+  door,
+  window,
+  carBase,
 }
